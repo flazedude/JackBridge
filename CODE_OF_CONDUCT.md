@@ -121,11 +121,11 @@ For answers to common questions about this code of conduct, see the FAQ at [http
 ## Contact
 
 For questions about this Code of Conduct, please:
-- Open a discussion in [GitHub Discussions](https://github.com/InterceptSuite/ProxyBridge/discussions)
-- Contact the project maintainers via [GitHub Issues](https://github.com/InterceptSuite/ProxyBridge/issues)
+- Open a discussion in [GitHub Discussions](https://github.com/InterceptSuite/JackBridge/discussions)
+- Contact the project maintainers via [GitHub Issues](https://github.com/InterceptSuite/JackBridge/issues)
 
 ---
 
 **Last Updated:** January 2026
 
-Thank you for helping make ProxyBridge a welcoming and inclusive community! 🤝
+Thank you for helping make JackBridge a welcoming and inclusive community! 🤝

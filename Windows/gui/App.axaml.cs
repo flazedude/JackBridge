@@ -2,20 +2,15 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Controls;
-using ProxyBridge.GUI.ViewModels;
-using ProxyBridge.GUI.Views;
+using JackBridge.GUI.ViewModels;
+using JackBridge.GUI.Views;
 using System;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace ProxyBridge.GUI;
+namespace JackBridge.GUI;
 
 public class App : Application
 {
     public static bool StartMinimized { get; set; }
-    private EventWaitHandle? _showWindowEvent;
-    private CancellationTokenSource? _eventListenerCts;
-    private const string EventName = "Global\\ProxyBridge_ShowWindow_Event_v3.1";
 
     public override void Initialize() => AvaloniaXamlLoader.Load(this);
 
@@ -31,18 +26,8 @@ public class App : Application
                 desktop.MainWindow.ShowInTaskbar = false;
             }
 
-            try
-            {
-                _showWindowEvent = new EventWaitHandle(false, EventResetMode.AutoReset, EventName);
-                _eventListenerCts = new CancellationTokenSource();
-                Task.Run(() => ListenForActivationSignal(_eventListenerCts.Token));
-            }
-            catch { }
-
             desktop.ShutdownRequested += (s, e) =>
             {
-                _eventListenerCts?.Cancel();
-                _showWindowEvent?.Dispose();
                 (desktop.MainWindow?.DataContext as MainWindowViewModel)?.Cleanup();
             };
 
@@ -50,24 +35,6 @@ public class App : Application
         }
 
         base.OnFrameworkInitializationCompleted();
-    }
-
-    private async Task ListenForActivationSignal(CancellationToken token)
-    {
-        while (!token.IsCancellationRequested)
-        {
-            try
-            {
-                var signaled = await Task.Run(() => _showWindowEvent?.WaitOne(1000) ?? false, token);
-                if (signaled && !token.IsCancellationRequested)
-                {
-                    await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
-                        TrayIcon_Show(null, EventArgs.Empty));
-                }
-            }
-            catch (OperationCanceledException) { break; }
-            catch { }
-        }
     }
 
     public void TrayIcon_Show(object? sender, EventArgs e)

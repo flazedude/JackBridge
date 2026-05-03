@@ -2,10 +2,10 @@ using System;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Windows.Input;
-using ProxyBridge.GUI.Services;
-using ProxyBridge.GUI.Common;
+using JackBridge.GUI.Common;
+using JackBridge.GUI.Services;
 
-namespace ProxyBridge.GUI.ViewModels;
+namespace JackBridge.GUI.ViewModels;
 
 public class ProxySettingsViewModel : ViewModelBase
 {
@@ -19,14 +19,14 @@ public class ProxySettingsViewModel : ViewModelBase
     private string _proxyPassword = "";
     private string _ipError = "";
     private string _portError = "";
-    private bool _isTestViewOpen = false;
+    private bool _isTestViewOpen;
     private string _testTargetHost = "google.com";
     private string _testTargetPort = "80";
     private string _testOutput = "";
-    private bool _isTesting = false;
-    private Action<string, string, string, string, string>? _onSave;
-    private Action? _onClose;
-    private Services.ProxyBridgeService? _proxyService;
+    private bool _isTesting;
+    private readonly Action<string, string, string, string, string>? _onSave;
+    private readonly Action? _onClose;
+    private readonly JackBridgeService? _proxyService;
 
     public string ProxyIp
     {
@@ -114,18 +114,15 @@ public class ProxySettingsViewModel : ViewModelBase
     public ICommand CloseTestCommand { get; }
     public ICommand StartTestCommand { get; }
 
-    private bool IsValidIpOrDomain(string input)
-    {
-        if (IPAddress.TryParse(input, out _))
-        {
-            return true;
-        }
-
-        var domainRegex = new Regex(@"^(?:[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)*[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?$");
-        return domainRegex.IsMatch(input);
-    }
-
-    public ProxySettingsViewModel(string initialType, string initialIp, string initialPort, string initialUsername, string initialPassword, Action<string, string, string, string, string> onSave, Action onClose, Services.ProxyBridgeService? proxyService)
+    public ProxySettingsViewModel(
+        string initialType,
+        string initialIp,
+        string initialPort,
+        string initialUsername,
+        string initialPassword,
+        Action<string, string, string, string, string> onSave,
+        Action onClose,
+        JackBridgeService? proxyService)
     {
         _onSave = onSave;
         _onClose = onClose;
@@ -148,21 +145,13 @@ public class ProxySettingsViewModel : ViewModelBase
             }
         });
 
-        CancelCommand = new RelayCommand(() =>
-        {
-            _onClose?.Invoke();
-        });
-
+        CancelCommand = new RelayCommand(() => _onClose?.Invoke());
         OpenTestCommand = new RelayCommand(() =>
         {
             IsTestViewOpen = true;
             TestOutput = "";
         });
-
-        CloseTestCommand = new RelayCommand(() =>
-        {
-            IsTestViewOpen = false;
-        });
+        CloseTestCommand = new RelayCommand(() => IsTestViewOpen = false);
 
         StartTestCommand = new RelayCommand(async () =>
         {
@@ -200,11 +189,9 @@ public class ProxySettingsViewModel : ViewModelBase
                 if (_proxyService != null)
                 {
                     _proxyService.SetProxyConfig(ProxyType, ProxyIp, proxyPortNum, ProxyUsername ?? "", ProxyPassword ?? "");
-
                     await System.Threading.Tasks.Task.Run(() =>
                     {
-                        var result = _proxyService.TestConnection(TestTargetHost, targetPortNum);
-                        TestOutput = result;
+                        TestOutput = _proxyService.TestConnection(TestTargetHost, targetPortNum);
                     });
                 }
                 else
@@ -221,5 +208,16 @@ public class ProxySettingsViewModel : ViewModelBase
                 IsTesting = false;
             }
         });
+    }
+
+    private static bool IsValidIpOrDomain(string input)
+    {
+        if (IPAddress.TryParse(input, out _))
+        {
+            return true;
+        }
+
+        var domainRegex = new Regex(@"^(?:[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)*[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?$");
+        return domainRegex.IsMatch(input);
     }
 }

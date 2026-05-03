@@ -1,10 +1,11 @@
 using Avalonia.Controls;
-using ProxyBridge.GUI.ViewModels;
+using JackBridge.GUI.ViewModels;
 using System;
 using System.ComponentModel;
 using Avalonia.Interactivity;
+using Avalonia.Input;
 
-namespace ProxyBridge.GUI.Views;
+namespace JackBridge.GUI.Views;
 
 public partial class MainWindow : Window
 {
@@ -35,6 +36,14 @@ public partial class MainWindow : Window
         if (DataContext is MainWindowViewModel vm)
         {
             vm.ChangeLanguage("zh");
+        }
+    }
+
+    private void OnPanelBackdropPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel vm && vm.ClosePanelCommand.CanExecute(null))
+        {
+            vm.ClosePanelCommand.Execute(null);
         }
     }
 

@@ -37,7 +37,7 @@ Pull requests without an associated issue will be rejected.
 
 ### Related GitHub Issue
 **Issue Link:** <!-- REQUIRED: Paste the link to your GitHub issue here -->
-<!-- Example: https://github.com/InterceptSuite/ProxyBridge/issues/123 -->
+<!-- Example: https://github.com/InterceptSuite/JackBridge/issues/123 -->
 
 ### Platform(s) Affected
 <!-- Check all that apply -->

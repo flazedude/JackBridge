@@ -1,14 +1,9 @@
-<Window xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:ProxyBridge.GUI.ViewModels"
-        x:Class="ProxyBridge.GUI.Views.UpdateCheckWindow"
+        xmlns:vm="using:JackBridge.GUI.ViewModels"
+        x:Class="JackBridge.GUI.Views.UpdateCheckWindow"
         x:DataType="vm:UpdateCheckViewModel"
         x:CompileBindings="True"
-        Title="Check for Updates"
-        Icon="/Assets/logo.ico"
-        Width="500" Height="300"
-        CanResize="False"
-        WindowStartupLocation="CenterOwner"
         Background="#FF1E1E1E">
 
     <Design.DataContext>
@@ -111,4 +106,4 @@
             </StackPanel>
         </Border>
     </Grid>
-</Window>
+</UserControl>

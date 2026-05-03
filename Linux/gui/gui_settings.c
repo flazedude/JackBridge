@@ -19,7 +19,7 @@ static gpointer run_test_thread(gpointer user_data) {
     memset(buffer, 0, 4096);
 
     // run test
-    ProxyBridge_TestConnection(req->host, req->port, buffer, 4096);
+    JackBridge_TestConnection(req->host, req->port, buffer, 4096);
 
     TestResultData *res = malloc(sizeof(TestResultData));
     res->result_text = buffer;
@@ -51,7 +51,7 @@ static void on_start_test_clicked(GtkWidget *widget, gpointer data) {
     const char *user = gtk_entry_get_text(GTK_ENTRY(info->user_entry));
     const char *pass = gtk_entry_get_text(GTK_ENTRY(info->pass_entry));
 
-    ProxyBridge_SetProxyConfig(type, ip_text, port, user, pass);
+    JackBridge_SetProxyConfig(type, ip_text, port, user, pass);
 
     // get target
     const char *t_host = gtk_entry_get_text(GTK_ENTRY(info->test_host));
@@ -207,7 +207,7 @@ void on_proxy_configure(GtkWidget *widget, gpointer data) {
         g_strlcpy(g_proxy_user, gtk_entry_get_text(GTK_ENTRY(info.user_entry)), sizeof(g_proxy_user));
         g_strlcpy(g_proxy_pass, gtk_entry_get_text(GTK_ENTRY(info.pass_entry)), sizeof(g_proxy_pass));
 
-        ProxyBridge_SetProxyConfig(g_proxy_type, g_proxy_ip, g_proxy_port, g_proxy_user, g_proxy_pass);
+        JackBridge_SetProxyConfig(g_proxy_type, g_proxy_ip, g_proxy_port, g_proxy_user, g_proxy_pass);
 
         save_config();
 

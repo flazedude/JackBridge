@@ -1,6 +1,6 @@
-# Contributing to ProxyBridge
+# Contributing to JackBridge
 
-Thank you for your interest in contributing to ProxyBridge! We welcome contributions from the community to help make this project better.
+Thank you for your interest in contributing to JackBridge! We welcome contributions from the community to help make this project better.
 
 ## Table of Contents
 
@@ -35,7 +35,7 @@ Before creating bug reports, please check existing issues to avoid duplicates. W
 - **Screenshots** if applicable
 - **Environment details**:
   - OS version (Windows 10/11, macOS version)
-  - ProxyBridge version
+  - JackBridge version
   - Proxy server type (SOCKS5/HTTP)
 
 ### Suggesting Features
@@ -99,7 +99,7 @@ Feature suggestions are welcome! Please provide:
 - **NSIS** (optional, for building installer) - Download from: https://nsis.sourceforge.io/
   - **EnVar Plugin** (required for NSIS) - Download from: https://nsis.sourceforge.io/EnVar_plug-in
   - Install EnVar plugin to: `C:\Program Files (x86)\NSIS\Plugins\`
-  - The installer uses EnVar to add ProxyBridge to system PATH
+  - The installer uses EnVar to add JackBridge to system PATH
 
 **WinDivert Setup:**
 1. Download WinDivert 2.2.2-A from the official website
@@ -119,8 +119,8 @@ Feature suggestions are welcome! Please provide:
 **Setup:**
 ```powershell
 # Clone the repository (dev branch)
-git clone -b dev https://github.com/InterceptSuite/ProxyBridge.git
-cd ProxyBridge/Windows
+git clone -b dev https://github.com/InterceptSuite/JackBridge.git
+cd JackBridge/Windows
 
 # Verify WinDivert is installed
 Test-Path C:\WinDivert-2.2.2-A\include\windivert.h
@@ -137,32 +137,32 @@ Test-Path C:\WinDivert-2.2.2-A\include\windivert.h
 ```
 
 **What compile.ps1 Does:**
-1. Compiles `ProxyBridgeCore.dll` from C source code (using MSVC or GCC)
+1. Compiles `JackBridgeCore.dll` from C source code (using MSVC or GCC)
 2. Copies WinDivert runtime files (`WinDivert.dll`, `WinDivert64.sys`, `WinDivert32.sys`)
-3. Publishes GUI app (`ProxyBridge.exe`) with .NET single-file deployment
-4. Publishes CLI app (`ProxyBridge_CLI.exe`) as single executable
+3. Publishes GUI app (`JackBridge.exe`) with .NET single-file deployment
+4. Publishes CLI app (`JackBridge_CLI.exe`) as single executable
 5. Optionally signs all binaries (requires code signing certificate)
-6. Builds NSIS installer (`ProxyBridge-Setup-3.1.0.exe`) if NSIS is installed
+6. Builds NSIS installer (`JackBridge-Setup-3.1.0.exe`) if NSIS is installed
 
 **Output:**
 All compiled files are placed in `Windows/output/` directory:
-- `ProxyBridgeCore.dll` - Native C library
-- `ProxyBridge.exe` - GUI application
-- `ProxyBridge_CLI.exe` - CLI application
+- `JackBridgeCore.dll` - Native C library
+- `JackBridge.exe` - GUI application
+- `JackBridge_CLI.exe` - CLI application
 - `WinDivert.dll`, `WinDivert64.sys` - WinDivert files
-- `ProxyBridge-Setup-3.1.0.exe` - Installer (if NSIS installed)
+- `JackBridge-Setup-3.1.0.exe` - Installer (if NSIS installed)
 - Additional .NET runtime DLLs
 
 **Project Structure:**
-- `Windows/src/` - C library core (ProxyBridge.c, ProxyBridge.h)
-  - `ProxyBridge.c` - Main packet interception logic
+- `Windows/src/` - C library core (JackBridge.c, JackBridge.h)
+  - `JackBridge.c` - Main packet interception logic
   - Uses WinDivert for kernel-level packet capture
 - `Windows/gui/` - Avalonia GUI (.NET 10.0)
   - GUI application using Avalonia UI framework
 - `Windows/cli/` - Command-line interface (.NET 10.0)
   - CLI application for headless operation
 - `Windows/installer/` - NSIS installer script
-  - `ProxyBridge.nsi` - Installer configuration
+  - `JackBridge.nsi` - Installer configuration
 - `Windows/compile.ps1` - Build script
 - `Windows/output/` - Compiled binaries (created by compile.ps1)
 
@@ -188,8 +188,8 @@ macOS development requires a valid Apple Developer account with proper signing c
 2. **Create Provisioning Profiles:**
    - Log in to Apple Developer Portal: https://developer.apple.com/account
    - Create two Provisioning Profiles:
-     - **ProxyBridge Prod** - for the main GUI app
-     - **ProxyBridge Extension Prod** - for the Network Extension
+     - **JackBridge Prod** - for the main GUI app
+     - **JackBridge Extension Prod** - for the Network Extension
    - Download and install both profiles on your system (double-click to install)
 
 3. **Configure Code Signing:**
@@ -198,15 +198,15 @@ macOS development requires a valid Apple Developer account with proper signing c
 
    **Step 1: Create config folder**
    ```bash
-   cd MacOS/ProxyBridge
+   cd MacOS/JackBridge
    mkdir config
    ```
 
    **Step 2: Copy template config files**
    ```bash
    # Copy template files from project root to config folder
-   cp proxybridge-app.xcconfig config/Signing-Config-app.xcconfig
-   cp proxybridge-ext.xcconfig config/Signing-Config-ext.xcconfig
+   cp jackbridge-app.xcconfig config/Signing-Config-app.xcconfig
+   cp jackbridge-ext.xcconfig config/Signing-Config-ext.xcconfig
    ```
 
    **Step 3: Edit config files with YOUR credentials**
@@ -216,14 +216,14 @@ macOS development requires a valid Apple Developer account with proper signing c
    // MARK: - Team Configuration
    DEVELOPMENT_TEAM = YOUR_TEAM_ID              // Replace with your Team ID (e.g., L4HJT32Z59)
 
-   // MARK: - Main App Signing (ProxyBridge)
+   // MARK: - Main App Signing (JackBridge)
    CODE_SIGN_STYLE = Manual
    CODE_SIGN_IDENTITY = Developer ID Application
-   CODE_SIGN_ENTITLEMENTS = ProxyBridge/ProxyBridgeRelease.entitlements
-   PRODUCT_BUNDLE_IDENTIFIER = com.interceptsuite.ProxyBridge
-   PRODUCT_MODULE_NAME = ProxyBridge
-   PRODUCT_NAME = ProxyBridge
-   PROVISIONING_PROFILE_SPECIFIER = ProxyBridge Prod  // Your provisioning profile name
+   CODE_SIGN_ENTITLEMENTS = JackBridge/JackBridgeRelease.entitlements
+   PRODUCT_BUNDLE_IDENTIFIER = com.interceptsuite.JackBridge
+   PRODUCT_MODULE_NAME = JackBridge
+   PRODUCT_NAME = JackBridge
+   PROVISIONING_PROFILE_SPECIFIER = JackBridge Prod  // Your provisioning profile name
 
    // MARK: - Additional Signing Settings
    CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO
@@ -239,9 +239,9 @@ macOS development requires a valid Apple Developer account with proper signing c
    CODE_SIGN_STYLE = Manual
    CODE_SIGN_IDENTITY = Developer ID Application
    CODE_SIGN_ENTITLEMENTS = extension/extensionRelease.entitlements
-   PRODUCT_BUNDLE_IDENTIFIER = com.interceptsuite.ProxyBridge.extension
-   PRODUCT_MODULE_NAME = com_interceptsuite_ProxyBridge_extension
-   PROVISIONING_PROFILE_SPECIFIER = ProxyBridge Extension Prod  // Your extension profile name
+   PRODUCT_BUNDLE_IDENTIFIER = com.interceptsuite.JackBridge.extension
+   PRODUCT_MODULE_NAME = com_interceptsuite_JackBridge_extension
+   PROVISIONING_PROFILE_SPECIFIER = JackBridge Extension Prod  // Your extension profile name
 
    // MARK: - Additional Signing Settings
    CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO
@@ -258,15 +258,15 @@ macOS development requires a valid Apple Developer account with proper signing c
 **Setup:**
 ```bash
 # Clone the repository (dev branch)
-git clone -b dev https://github.com/InterceptSuite/ProxyBridge.git
-cd ProxyBridge/MacOS/ProxyBridge
+git clone -b dev https://github.com/InterceptSuite/JackBridge.git
+cd JackBridge/MacOS/JackBridge
 
 # Edit signing configuration files with your Apple Developer details
-# proxybridge-app.xcconfig - for main app
-# proxybridge-ext.xcconfig - for network extension
+# jackbridge-app.xcconfig - for main app
+# jackbridge-ext.xcconfig - for network extension
 
 # Open in Xcode and configure signing (see steps above)
-open ProxyBridge.xcodeproj
+open JackBridge.xcodeproj
 ```
 
 **Building the Application:**
@@ -282,7 +282,7 @@ You **MUST** create a **Release build** for the Network Extension to function pr
 2. **Create Archive (Release Build):**
    ```
    In Xcode:
-   - Select "ProxyBridge" scheme
+   - Select "JackBridge" scheme
    - Go to: Product → Archive
    - Wait for archive to complete
    ```
@@ -295,43 +295,43 @@ You **MUST** create a **Release build** for the Network Extension to function pr
    - Click "Distribute App"
    - Choose "Developer ID" (for distribution outside App Store)
    - Select "Export"
-   - Choose export location: MacOS/ProxyBridge/output/
+   - Choose export location: MacOS/JackBridge/output/
    - Click "Export"
    ```
 
-   This will create a **signed and notarized** `ProxyBridge.app` in the output folder.
+   This will create a **signed and notarized** `JackBridge.app` in the output folder.
 
 4. **Create PKG Installer (Optional):**
    ```bash
    # The build.sh script creates a PKG installer from the .app
    # It does NOT build the .app - you must export it from Xcode first
 
-   cd MacOS/ProxyBridge
+   cd MacOS/JackBridge
 
-   # Verify ProxyBridge.app exists in output/
-   ls -la output/ProxyBridge.app
+   # Verify JackBridge.app exists in output/
+   ls -la output/JackBridge.app
 
    # Create PKG installer
    ./build.sh
    ```
 
    **What build.sh does:**
-   - Checks for `output/ProxyBridge.app` (exits if not found)
-   - Creates PKG installer: `output/ProxyBridge-v3.1-Universal-Installer.pkg`
+   - Checks for `output/JackBridge.app` (exits if not found)
+   - Creates PKG installer: `output/JackBridge-v3.1-Universal-Installer.pkg`
    - Optionally signs and notarizes the PKG (requires .env file with credentials)
 
 **Output:**
-- `MacOS/ProxyBridge/output/ProxyBridge.app` - Release build (from Xcode Archive)
-- `MacOS/ProxyBridge/output/ProxyBridge-v3.1-Universal-Installer.pkg` - PKG installer (from build.sh)
+- `MacOS/JackBridge/output/JackBridge.app` - Release build (from Xcode Archive)
+- `MacOS/JackBridge/output/JackBridge-v3.1-Universal-Installer.pkg` - PKG installer (from build.sh)
 
 **Project Structure:**
-- `MacOS/ProxyBridge/ProxyBridge/` - SwiftUI main app
-- `MacOS/ProxyBridge/extension/` - Network Extension provider
-- `MacOS/ProxyBridge/config/` - Your signing configuration (NOT in git)
-- `MacOS/ProxyBridge/build.sh` - PKG installer creation script
-- `MacOS/ProxyBridge/output/` - Exported .app and PKG installer
-- `proxybridge-app.xcconfig` - Template config (in project root)
-- `proxybridge-ext.xcconfig` - Template config (in project root)
+- `MacOS/JackBridge/JackBridge/` - SwiftUI main app
+- `MacOS/JackBridge/extension/` - Network Extension provider
+- `MacOS/JackBridge/config/` - Your signing configuration (NOT in git)
+- `MacOS/JackBridge/build.sh` - PKG installer creation script
+- `MacOS/JackBridge/output/` - Exported .app and PKG installer
+- `jackbridge-app.xcconfig` - Template config (in project root)
+- `jackbridge-ext.xcconfig` - Template config (in project root)
 
 ## Pull Request Process
 
@@ -498,7 +498,7 @@ public class ProxySettingsViewModel : ViewModelBase
 
 ```swift
 // Use Swift naming conventions
-class ProxyBridgeViewModel: ObservableObject {
+class JackBridgeViewModel: ObservableObject {
     @Published var proxyHost: String = "127.0.0.1"
     @Published var proxyPort: String = "1080"
 
@@ -577,12 +577,12 @@ Bad:
 
 - Open an issue for discussion
 - Check existing issues and discussions
-- Contact: [GitHub Issues](https://github.com/InterceptSuite/ProxyBridge/issues)
+- Contact: [GitHub Issues](https://github.com/InterceptSuite/JackBridge/issues)
 
 ## License
 
-By contributing to ProxyBridge, you agree that your contributions will be licensed under the MIT License.
+By contributing to JackBridge, you agree that your contributions will be licensed under the MIT License.
 
 ---
 
-Thank you for contributing to ProxyBridge! 🎉
+Thank you for contributing to JackBridge! 🎉

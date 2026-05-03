@@ -8,7 +8,7 @@ using System.Reflection;
 using System.Diagnostics;
 using System.Linq;
 
-namespace ProxyBridge.GUI.Services;
+namespace JackBridge.GUI.Services;
 
 [JsonSourceGenerationOptions(WriteIndented = true)]
 [JsonSerializable(typeof(GitHubRelease))]
@@ -20,18 +20,32 @@ internal partial class SourceGenerationContext : JsonSerializerContext
 public class UpdateService
 {
     private readonly HttpClient _httpClient;
-    private const string GitHubApiUrl = "https://api.github.com/repos/InterceptSuite/ProxyBridge/releases/latest";
+    private const string? GitHubApiUrl = null;
 
     public UpdateService()
     {
         _httpClient = new HttpClient();
-        _httpClient.DefaultRequestHeaders.Add("User-Agent", "ProxyBridge-UpdateChecker");
+        _httpClient.DefaultRequestHeaders.Add("User-Agent", "JackBridge-UpdateChecker");
     }
 
     public async Task<VersionInfo> CheckForUpdatesAsync()
     {
         try
         {
+            if (string.IsNullOrWhiteSpace(GitHubApiUrl))
+            {
+                var configuredVersion = GetCurrentVersion();
+                return new VersionInfo
+                {
+                    CurrentVersion = configuredVersion,
+                    LatestVersion = configuredVersion,
+                    IsUpdateAvailable = false,
+                    Error = "Update checks are not configured for JackBridge.",
+                    LatestVersionString = "Not configured",
+                    CurrentVersionString = FormatVersion(configuredVersion)
+                };
+            }
+
             var response = await _httpClient.GetStringAsync(GitHubApiUrl);
             var release = JsonSerializer.Deserialize(response, SourceGenerationContext.Default.GitHubRelease);
 
@@ -43,7 +57,7 @@ public class UpdateService
                 a.Name?.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) == true &&
                 (a.Name.Contains("setup", StringComparison.OrdinalIgnoreCase) ||
                  a.Name.Contains("installer", StringComparison.OrdinalIgnoreCase) ||
-                 a.Name.Contains("ProxyBridge", StringComparison.OrdinalIgnoreCase)));
+                 a.Name.Contains("JackBridge", StringComparison.OrdinalIgnoreCase)));
 
             // Only mark update as available if:
             // 1. Version is newer AND

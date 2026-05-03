@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using ProxyBridge.GUI.ViewModels;
+using JackBridge.GUI.ViewModels;
 
-namespace ProxyBridge.GUI.Services;
+namespace JackBridge.GUI.Services;
 
 public class AppConfig
 {
@@ -14,6 +14,7 @@ public class AppConfig
     public string ProxyPort { get; set; } = "";
     public string ProxyUsername { get; set; } = "";
     public string ProxyPassword { get; set; } = "";
+    public bool IsProxyEnabled { get; set; } = false;
     public bool DnsViaProxy { get; set; } = true;
     public bool LocalhostViaProxy { get; set; } = false;  // Default: disabled
     public bool IsTrafficLoggingEnabled { get; set; } = true;
@@ -30,6 +31,7 @@ public class ProxyRuleConfig
     public string Protocol { get; set; } = "TCP";
     public string Action { get; set; } = "PROXY";
     public bool IsEnabled { get; set; } = true;
+    public bool IsStatic { get; set; } = false;
 }
 
 [JsonSerializable(typeof(AppConfig))]
@@ -91,12 +93,17 @@ internal static class AtomicFileHelper
 
 public static class ConfigManager
 {
-    private static readonly string ConfigDirectory = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-        "ProxyBridge"
+    private static readonly string ConfigFilePath = Path.Combine(
+        AppContext.BaseDirectory,
+        "config.json"
     );
 
-    private static readonly string ConfigFilePath = Path.Combine(ConfigDirectory, "config.json");
+    private static readonly string LegacyConfigDirectory = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+        "JackBridge"
+    );
+
+    private static readonly string LegacyConfigFilePath = Path.Combine(LegacyConfigDirectory, "config.json");
 
     public static bool SaveConfig(AppConfig config)
     {
@@ -106,6 +113,8 @@ public static class ConfigManager
 
     public static AppConfig LoadConfig()
     {
+        MigrateLegacyConfigIfNeeded();
+
         var json = AtomicFileHelper.SafeReadFile(ConfigFilePath);
         if (json == null)
         {
@@ -129,5 +138,21 @@ public static class ConfigManager
     public static bool ConfigExists()
     {
         return File.Exists(ConfigFilePath);
+    }
+
+    private static void MigrateLegacyConfigIfNeeded()
+    {
+        if (File.Exists(ConfigFilePath) || !File.Exists(LegacyConfigFilePath))
+            return;
+
+        try
+        {
+            var legacyContent = AtomicFileHelper.SafeReadFile(LegacyConfigFilePath);
+            if (legacyContent != null)
+            {
+                AtomicFileHelper.AtomicWrite(ConfigFilePath, legacyContent);
+            }
+        }
+        catch { }
     }
 }

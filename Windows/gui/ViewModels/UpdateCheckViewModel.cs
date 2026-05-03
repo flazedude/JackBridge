@@ -1,10 +1,10 @@
 using System;
 using System.Windows.Input;
 using System.Threading.Tasks;
-using ProxyBridge.GUI.Services;
-using ProxyBridge.GUI.Common;
+using JackBridge.GUI.Services;
+using JackBridge.GUI.Common;
 
-namespace ProxyBridge.GUI.ViewModels;
+namespace JackBridge.GUI.ViewModels;
 
 public class UpdateCheckViewModel : ViewModelBase
 {

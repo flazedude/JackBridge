@@ -11,8 +11,8 @@ CFLAGS = -Wall -Wextra -O3 -fPIC -D_GNU_SOURCE \
 LDFLAGS = -shared -Wl,-z,relro,-z,now -Wl,-z,noexecstack -s
 LIBS = -lpthread -lnetfilter_queue -lnfnetlink
 
-TARGET = libproxybridge.so
-SOURCES = ProxyBridge.c
+TARGET = libjackbridge.so
+SOURCES = JackBridge.c
 OBJECTS = $(SOURCES:.c=.o)
 
 all: $(TARGET)

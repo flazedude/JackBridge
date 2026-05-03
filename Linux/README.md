@@ -1,4 +1,4 @@
-# ProxyBridge for Linux
+# JackBridge for Linux
 
 Universal proxy client for Linux applications - Route any application through SOCKS5/HTTP proxies.
 
@@ -28,14 +28,14 @@ Universal proxy client for Linux applications - Route any application through SO
 **One-command automatic installation:**
 
 ```bash
-curl -Lo deploy.sh https://raw.githubusercontent.com/InterceptSuite/ProxyBridge/refs/heads/master/Linux/deploy.sh && sudo bash deploy.sh
+curl -Lo deploy.sh https://raw.githubusercontent.com/InterceptSuite/JackBridge/refs/heads/master/Linux/deploy.sh && sudo bash deploy.sh
 ```
 
 This script will:
 - Download the latest release from GitHub automatically
 - Detect your Linux distribution
 - Install all required dependencies (libnetfilter-queue, iptables, GTK3)
-- Install ProxyBridge CLI, GUI, and library to system paths
+- Install JackBridge CLI, GUI, and library to system paths
 - Update library cache (ldconfig)
 - Verify installation
 
@@ -51,11 +51,11 @@ This script will:
 
 **From GitHub Releases:**
 
-1. Download the latest `ProxyBridge-Linux-vX.X.X.tar.gz` from the [Releases](https://github.com/InterceptSuite/ProxyBridge/releases) page
+1. Download the latest `JackBridge-Linux-vX.X.X.tar.gz` from the [Releases](https://github.com/InterceptSuite/JackBridge/releases) page
 2. Extract the archive:
    ```bash
-   tar -xzf ProxyBridge-Linux-vX.X.X.tar.gz
-   cd ProxyBridge-Linux-vX.X.X
+   tar -xzf JackBridge-Linux-vX.X.X.tar.gz
+   cd JackBridge-Linux-vX.X.X
    ```
 3. Run the setup script with root privileges:
    ```bash
@@ -64,16 +64,16 @@ This script will:
 
 The setup script will:
 - Install runtime dependencies (libnetfilter-queue, iptables, GTK3)
-- Copy binaries to `/usr/local/bin` (ProxyBridge CLI and GUI)
-- Copy library to `/usr/local/lib` (libproxybridge.so)
+- Copy binaries to `/usr/local/bin` (JackBridge CLI and GUI)
+- Copy library to `/usr/local/lib` (libjackbridge.so)
 - Update library cache
 - Verify installation
 
 **What gets installed:**
-- `/usr/local/bin/ProxyBridge` - Command-line interface
-- `/usr/local/bin/ProxyBridgeGUI` - Graphical interface (if GTK3 available)
-- `/usr/local/lib/libproxybridge.so` - Core library
-- `/etc/proxybridge/` - Configuration directory
+- `/usr/local/bin/JackBridge` - Command-line interface
+- `/usr/local/bin/JackBridgeGUI` - Graphical interface (if GTK3 available)
+- `/usr/local/lib/libjackbridge.so` - Core library
+- `/etc/jackbridge/` - Configuration directory
 
 ## Usage
 
@@ -82,7 +82,7 @@ The setup script will:
 **Launch GUI (requires GTK3):**
 
 ```bash
-sudo ProxyBridgeGUI
+sudo JackBridgeGUI
 ```
 
 The GTK3-based GUI provides:
@@ -101,50 +101,50 @@ The CLI provides powerful automation and scripting capabilities with rule-based 
 
 ```bash
 # Help menu
-ProxyBridge --help
+JackBridge --help
 
 # Route curl through SOCKS5 proxy
-sudo ProxyBridge --proxy socks5://127.0.0.1:1080 --rule "curl:*:*:TCP:PROXY"
+sudo JackBridge --proxy socks5://127.0.0.1:1080 --rule "curl:*:*:TCP:PROXY"
 
 # Route multiple processes in single rule (semicolon-separated)
-sudo ProxyBridge --proxy http://127.0.0.1:8080 --rule "curl;wget;firefox:*:*:TCP:PROXY"
+sudo JackBridge --proxy http://127.0.0.1:8080 --rule "curl;wget;firefox:*:*:TCP:PROXY"
 
 # Multiple rules with verbose connection logging
-sudo ProxyBridge --proxy http://127.0.0.1:8080 \
+sudo JackBridge --proxy http://127.0.0.1:8080 \
     --rule "curl:*:*:TCP:PROXY" \
     --rule "wget:*:*:TCP:PROXY" \
     --verbose 2
 
 # Block specific application from internet access
-sudo ProxyBridge --rule "malware:*:*:BOTH:BLOCK"
+sudo JackBridge --rule "malware:*:*:BOTH:BLOCK"
 
 # Route specific apps through proxy, block everything else
-sudo ProxyBridge --proxy socks5://127.0.0.1:1080 \
+sudo JackBridge --proxy socks5://127.0.0.1:1080 \
     --rule "curl:*:*:TCP:PROXY" \
     --rule "firefox:*:*:TCP:PROXY" \
     --rule "*:*:*:BOTH:BLOCK"
 
 # Route all through proxy except proxy app itself
-sudo ProxyBridge --proxy socks5://127.0.0.1:1080 \
+sudo JackBridge --proxy socks5://127.0.0.1:1080 \
     --rule "*:*:*:TCP:PROXY" \
     --rule "burpsuite:*:*:TCP:DIRECT"
 
 # Target specific IPs and ports
-sudo ProxyBridge --proxy socks5://127.0.0.1:1080 \
+sudo JackBridge --proxy socks5://127.0.0.1:1080 \
     --rule "curl:192.168.*.*;10.10.*.*:80;443;8080:TCP:PROXY"
 
 # IP range support
-sudo ProxyBridge --proxy socks5://192.168.1.4:4444 \
+sudo JackBridge --proxy socks5://192.168.1.4:4444 \
     --rule "curl:3.19.110.0-3.19.115.255:*:TCP:PROXY"
 
 # Cleanup after crash (removes iptables rules)
-sudo ProxyBridge --cleanup
+sudo JackBridge --cleanup
 ```
 
 #### Command Line Options
 
 ```
-sudo ProxyBridge --help
+sudo JackBridge --help
 
   ____                        ____       _     _            
  |  _ \ _ __ _____  ___   _  | __ ) _ __(_) __| | __ _  ___ 
@@ -156,10 +156,10 @@ sudo ProxyBridge --help
   Universal proxy client for Linux applications
 
         Author: Sourav Kalal/InterceptSuite
-        GitHub: https://github.com/InterceptSuite/ProxyBridge
+        GitHub: https://github.com/InterceptSuite/JackBridge
 
 USAGE:
-  ProxyBridge [OPTIONS]
+  JackBridge [OPTIONS]
 
 OPTIONS:
   --proxy <url>          Proxy server URL with optional authentication
@@ -192,27 +192,27 @@ OPTIONS:
                            3 - Show both logs and connections
 
   --cleanup              Cleanup resources (iptables, etc.) from crashed instance
-                         Use if ProxyBridge crashed without proper cleanup
+                         Use if JackBridge crashed without proper cleanup
 
   --help, -h             Show this help message
 
 EXAMPLES:
   # Basic usage with default proxy
-  sudo ProxyBridge --rule curl:*:*:TCP:PROXY
+  sudo JackBridge --rule curl:*:*:TCP:PROXY
 
   # Multiple rules with custom proxy
-  sudo ProxyBridge --proxy socks5://192.168.1.10:1080 \
+  sudo JackBridge --proxy socks5://192.168.1.10:1080 \
        --rule curl:*:*:TCP:PROXY \
        --rule wget:*:*:TCP:PROXY \
        --verbose 2
 
   # Route DNS through proxy with multiple apps
-  sudo ProxyBridge --proxy socks5://127.0.0.1:1080 \
+  sudo JackBridge --proxy socks5://127.0.0.1:1080 \
        --rule "curl;wget;firefox:*:*:BOTH:PROXY" \
        --dns-via-proxy true --verbose 3
 
 NOTE:
-  ProxyBridge requires root privileges to use nfqueue.
+  JackBridge requires root privileges to use nfqueue.
   Run with 'sudo' or as root user.
 
 ```
@@ -251,7 +251,7 @@ NOTE:
 **Notes:**
 - Process names are case-sensitive on Linux
 - Use `*` as the process name to set a default action for all traffic
-- Press `Ctrl+C` to stop ProxyBridge
+- Press `Ctrl+C` to stop JackBridge
 - On crash, use `--cleanup` flag to remove iptables rules
 
 ## Use Cases
@@ -267,7 +267,7 @@ NOTE:
 ## Current Limitations
 
 - **IPv4 only** (IPv6 not supported)
-- **WSL (Windows Subsystem for Linux) NOT supported** - Neither WSL1 nor WSL2 work with ProxyBridge:
+- **WSL (Windows Subsystem for Linux) NOT supported** - Neither WSL1 nor WSL2 work with JackBridge:
   - **WSL2**: Kernel does not support `nfnetlink_queue` module
     - Extension shows as "builtin" but is non-functional at runtime
     - NFQUEUE handle creation fails
@@ -276,7 +276,7 @@ NOTE:
     - NFQUEUE is completely unavailable
   - **Works on:** Native Linux, VirtualBox VMs, VMware, cloud instances (AWS, GCP, Azure), bare-metal servers
   - **Does NOT work on:** WSL1, WSL2, Docker containers with limited capabilities
-  - **Windows users:** Use the Windows version of ProxyBridge instead - it's specifically designed for Windows and works perfectly
+  - **Windows users:** Use the Windows version of JackBridge instead - it's specifically designed for Windows and works perfectly
 - **Root privileges required** - NFQUEUE and iptables require root access
 - **GUI requires GTK3** - Command-line interface works without GUI dependencies
 
@@ -293,15 +293,15 @@ NOTE:
 
   These addresses and ports are used by system components, network discovery, and essential Linux services.
 
-- **UDP Proxy Requirements**: UDP traffic only works when a SOCKS5 proxy is configured. If an HTTP proxy server is configured, ProxyBridge will ignore UDP proxy rules and route UDP traffic as direct connection instead. This limitation does not affect UDP rules with BLOCK or DIRECT actions.
+- **UDP Proxy Requirements**: UDP traffic only works when a SOCKS5 proxy is configured. If an HTTP proxy server is configured, JackBridge will ignore UDP proxy rules and route UDP traffic as direct connection instead. This limitation does not affect UDP rules with BLOCK or DIRECT actions.
 
   **Important UDP Considerations**:
   - Configuring a SOCKS5 proxy does not guarantee UDP will work. Most SOCKS5 proxies do not support UDP traffic, including SSH SOCKS5 proxies.
-  - The SOCKS5 proxy must support UDP ASSOCIATE command. If ProxyBridge fails to establish a UDP association with the SOCKS5 proxy, packets will fail to connect.
+  - The SOCKS5 proxy must support UDP ASSOCIATE command. If JackBridge fails to establish a UDP association with the SOCKS5 proxy, packets will fail to connect.
   - Many UDP applications use HTTP/3 and DTLS protocols. Even if your SOCKS5 proxy supports UDP ASSOCIATE, ensure it can handle DTLS and HTTP/3 UDP traffic, as they require separate handling beyond raw UDP packets.
-  - **Testing UDP/HTTP3/DTLS Support**: If you need to test UDP, HTTP/3, and DTLS support with a SOCKS5 proxy, try [Nexus Proxy](https://github.com/InterceptSuite/nexus-proxy) - a proxy application created specifically to test ProxyBridge with advanced UDP protocols.
+  - **Testing UDP/HTTP3/DTLS Support**: If you need to test UDP, HTTP/3, and DTLS support with a SOCKS5 proxy, try [Nexus Proxy](https://github.com/InterceptSuite/nexus-proxy) - a proxy application created specifically to test JackBridge with advanced UDP protocols.
 
-- **Root Privileges**: ProxyBridge requires root access to:
+- **Root Privileges**: JackBridge requires root access to:
   - Create NFQUEUE handles for packet interception
   - Add/remove iptables rules in mangle and nat tables
   - Listen on relay ports (34010 for TCP, 34011 for UDP)
@@ -315,12 +315,12 @@ NOTE:
 
 ## How It Works
 
-ProxyBridge uses Linux Netfilter NFQUEUE to intercept TCP/UDP packets and applies user-defined rules to route traffic through proxies.
+JackBridge uses Linux Netfilter NFQUEUE to intercept TCP/UDP packets and applies user-defined rules to route traffic through proxies.
 
 **Case 1: Packet does not match any rules**
 
 ```
-Application → TCP/UDP Packet → NFQUEUE → ProxyBridge
+Application → TCP/UDP Packet → NFQUEUE → JackBridge
                                             ↓
                                      [No Match or DIRECT]
                                             ↓
@@ -332,7 +332,7 @@ Application → TCP/UDP Packet → NFQUEUE → ProxyBridge
 **Case 2: Packet matches proxy rule**
 
 ```
-Application → TCP/UDP Packet → NFQUEUE → ProxyBridge
+Application → TCP/UDP Packet → NFQUEUE → JackBridge
                                             ↓
                                         [PROXY Rule Match]
                                             ↓
@@ -371,9 +371,9 @@ Application → TCP/UDP Packet → NFQUEUE → ProxyBridge
    iptables -t mangle -A OUTPUT -p udp -j NFQUEUE --queue-num 0
    ```
 
-3. **NFQUEUE Delivery** - libnetfilter_queue delivers packets to ProxyBridge in userspace
+3. **NFQUEUE Delivery** - libnetfilter_queue delivers packets to JackBridge in userspace
 
-4. **Rule Evaluation** - ProxyBridge inspects each packet and applies configured rules:
+4. **Rule Evaluation** - JackBridge inspects each packet and applies configured rules:
    - **BLOCK** → Packet verdict: DROP (no network access)
    - **DIRECT** → Packet verdict: ACCEPT (direct connection)
    - **NO MATCH** → Packet verdict: ACCEPT (direct connection)
@@ -400,13 +400,13 @@ Application → TCP/UDP Packet → NFQUEUE → ProxyBridge
 
 - **NFQUEUE vs WinDivert**: Linux uses Netfilter NFQUEUE (kernel feature) instead of WinDivert (Windows kernel driver)
 
-- **Why NFQUEUE Instead of eBPF**: While eBPF is the modern approach for Linux networking tasks and offers better performance, ProxyBridge uses NFQUEUE due to fundamental limitations discovered during development:
-  - **Original Plan**: ProxyBridge 3.1.0 for Linux was initially developed using eBPF after weeks of implementation
-  - **eBPF Memory Limitations**: eBPF provides limited memory space, which proved insufficient for ProxyBridge's feature set:
-    - ProxyBridge supports multiple complex proxy rules with wildcard matching, IP ranges, and process patterns
+- **Why NFQUEUE Instead of eBPF**: While eBPF is the modern approach for Linux networking tasks and offers better performance, JackBridge uses NFQUEUE due to fundamental limitations discovered during development:
+  - **Original Plan**: JackBridge 3.1.0 for Linux was initially developed using eBPF after weeks of implementation
+  - **eBPF Memory Limitations**: eBPF provides limited memory space, which proved insufficient for JackBridge's feature set:
+    - JackBridge supports multiple complex proxy rules with wildcard matching, IP ranges, and process patterns
     - Storing and evaluating these rules within eBPF's memory constraints was not feasible
     - Alternative workarounds added excessive latency (200-500ms+ per packet)
-  - **Performance Requirements**: ProxyBridge's core design goals couldn't be met with eBPF:
+  - **Performance Requirements**: JackBridge's core design goals couldn't be met with eBPF:
     - Work efficiently with minimal memory usage under high load
     - Handle high traffic volumes (10,000+ concurrent connections)
     - **Network speed impact must be ≤2-5% for proxied traffic only**
@@ -418,9 +418,9 @@ Application → TCP/UDP Packet → NFQUEUE → ProxyBridge
     - Mature, stable kernel interface available on all Linux distributions
     - Lower latency than eBPF workarounds when handling complex rule sets
 
-  **Verdict**: NFQUEUE provides the right balance of flexibility, performance, and compatibility for ProxyBridge's requirements. While eBPF excels for simple packet filtering, ProxyBridge's advanced rule engine and protocol conversion needs are better served by NFQUEUE's userspace processing model.
+  **Verdict**: NFQUEUE provides the right balance of flexibility, performance, and compatibility for JackBridge's requirements. While eBPF excels for simple packet filtering, JackBridge's advanced rule engine and protocol conversion needs are better served by NFQUEUE's userspace processing model.
 
-- **Packet Marking**: ProxyBridge marks packets (mark=1 for TCP, mark=2 for UDP) instead of modifying destination
+- **Packet Marking**: JackBridge marks packets (mark=1 for TCP, mark=2 for UDP) instead of modifying destination
 - **iptables Integration**: Uses mangle table (pre-routing processing) + nat table (port redirection)
 - **Transparent Redirection**: Applications remain completely unaware of proxying
 - **SO_ORIGINAL_DST**: Socket option retrieves original destination after NAT redirect
@@ -473,10 +473,10 @@ Application → TCP/UDP Packet → NFQUEUE → ProxyBridge
        gtk3 pkg-config
    ```
 
-2. **Clone or download ProxyBridge source code:**
+2. **Clone or download JackBridge source code:**
    ```bash
-   git clone https://github.com/InterceptSuite/ProxyBridge.git
-   cd ProxyBridge/Linux
+   git clone https://github.com/InterceptSuite/JackBridge.git
+   cd JackBridge/Linux
    ```
 
 3. **Build using the build script:**
@@ -486,9 +486,9 @@ Application → TCP/UDP Packet → NFQUEUE → ProxyBridge
    ```
 
    This will compile:
-   - `libproxybridge.so` - Core library
-   - `ProxyBridge` - CLI application
-   - `ProxyBridgeGUI` - GUI application (if GTK3 is available)
+   - `libjackbridge.so` - Core library
+   - `JackBridge` - CLI application
+   - `JackBridgeGUI` - GUI application (if GTK3 is available)
 
 4. **Install to system paths:**
    ```bash
@@ -497,18 +497,18 @@ Application → TCP/UDP Packet → NFQUEUE → ProxyBridge
 
    Or manually copy binaries:
    ```bash
-   sudo cp output/libproxybridge.so /usr/local/lib/
-   sudo cp output/ProxyBridge /usr/local/bin/
-   sudo cp output/ProxyBridgeGUI /usr/local/bin/  # If GUI was built
+   sudo cp output/libjackbridge.so /usr/local/lib/
+   sudo cp output/JackBridge /usr/local/bin/
+   sudo cp output/JackBridgeGUI /usr/local/bin/  # If GUI was built
    sudo ldconfig
    ```
 
 ### Build Output
 
 After successful build, binaries will be in the `output/` directory:
-- `output/libproxybridge.so` - Shared library
-- `output/ProxyBridge` - CLI binary
-- `output/ProxyBridgeGUI` - GUI binary (if GTK3 available)
+- `output/libjackbridge.so` - Shared library
+- `output/JackBridge` - CLI binary
+- `output/JackBridgeGUI` - GUI binary (if GTK3 available)
 
 ### Manual Compilation
 
@@ -519,10 +519,10 @@ gcc -Wall -Wextra -O3 -fPIC -D_GNU_SOURCE \
     -fstack-protector-strong -D_FORTIFY_SOURCE=2 -fPIE \
     -Wformat -Wformat-security -Werror=format-security \
     -fno-strict-overflow -fno-delete-null-pointer-checks -fwrapv \
-    -c ProxyBridge.c -o ProxyBridge.o
+    -c JackBridge.c -o JackBridge.o
 
 gcc -shared -Wl,-z,relro,-z,now -Wl,-z,noexecstack -s \
-    -o libproxybridge.so ProxyBridge.o \
+    -o libjackbridge.so JackBridge.o \
     -lpthread -lnetfilter_queue -lnfnetlink
 ```
 
@@ -535,40 +535,40 @@ gcc -Wall -Wextra -O3 -I../src \
     -fno-strict-overflow -fno-delete-null-pointer-checks -fwrapv \
     -c main.c -o main.o
 
-gcc -o ProxyBridge main.o \
+gcc -o JackBridge main.o \
     -L../src -pie -Wl,-z,relro,-z,now -Wl,-z,noexecstack -s \
     -Wl,-rpath,/usr/local/lib \
-    -lproxybridge -lpthread
+    -ljackbridge -lpthread
 ```
 
 ## Uninstallation
 
-To remove ProxyBridge from your system:
+To remove JackBridge from your system:
 
 ```bash
 # Remove binaries
-sudo rm -f /usr/local/bin/ProxyBridge
-sudo rm -f /usr/local/bin/ProxyBridgeGUI
+sudo rm -f /usr/local/bin/JackBridge
+sudo rm -f /usr/local/bin/JackBridgeGUI
 
 # Remove library
-sudo rm -f /usr/local/lib/libproxybridge.so
+sudo rm -f /usr/local/lib/libjackbridge.so
 
 # Remove configuration
-sudo rm -rf /etc/proxybridge
+sudo rm -rf /etc/jackbridge
 
 # Update library cache
 sudo ldconfig
 
 # Remove ld.so.conf entry (if exists)
-sudo rm -f /etc/ld.so.conf.d/proxybridge.conf
+sudo rm -f /etc/ld.so.conf.d/jackbridge.conf
 sudo ldconfig
 ```
 
 **Cleanup after crash:**
 
-If ProxyBridge crashed and left iptables rules:
+If JackBridge crashed and left iptables rules:
 ```bash
-sudo ProxyBridge --cleanup
+sudo JackBridge --cleanup
 ```
 
 Or manually remove iptables rules:
@@ -586,5 +586,5 @@ MIT License - See LICENSE file for details
 ---
 
 **Author:** Sourav Kalal / InterceptSuite
-**GitHub:** https://github.com/InterceptSuite/ProxyBridge
-**Documentation:** https://github.com/InterceptSuite/ProxyBridge/tree/master/Linux
+**GitHub:** https://github.com/InterceptSuite/JackBridge
+**Documentation:** https://github.com/InterceptSuite/JackBridge/tree/master/Linux

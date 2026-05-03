@@ -1,8 +1,8 @@
 using Avalonia.Controls;
 
-namespace ProxyBridge.GUI.Views;
+namespace JackBridge.GUI.Views;
 
-public partial class UpdateCheckWindow : Window
+public partial class UpdateCheckWindow : UserControl
 {
     public UpdateCheckWindow()
     {

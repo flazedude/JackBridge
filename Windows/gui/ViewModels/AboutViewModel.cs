@@ -1,9 +1,9 @@
 using System;
 using System.Reflection;
 using System.Windows.Input;
-using ProxyBridge.GUI.Common;
+using JackBridge.GUI.Common;
 
-namespace ProxyBridge.GUI.ViewModels;
+namespace JackBridge.GUI.ViewModels;
 
 public class AboutViewModel
 {
@@ -16,10 +16,13 @@ public class AboutViewModel
 
     public AboutViewModel(Action onClose)
     {
-        var version = Assembly.GetExecutingAssembly().GetName().Version;
-        Version = version != null
-            ? $"Version {version.Major}.{version.Minor}.{version.Build}"
-            : "Version 1.0.0";
+        var version = Assembly.GetExecutingAssembly()
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
+            .InformationalVersion;
+
+        Version = string.IsNullOrWhiteSpace(version)
+            ? "Version 1.1.0-beta"
+            : $"Version {version}";
 
         CloseCommand = new RelayCommand(onClose);
     }

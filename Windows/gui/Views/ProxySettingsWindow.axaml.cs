@@ -1,16 +1,16 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using ProxyBridge.GUI.ViewModels;
+using JackBridge.GUI.ViewModels;
 
-namespace ProxyBridge.GUI.Views;
+namespace JackBridge.GUI.Views;
 
-public partial class ProxySettingsWindow : Window
+public partial class ProxySettingsWindow : UserControl
 {
     public ProxySettingsWindow()
     {
         InitializeComponent();
 
-        this.Opened += (s, e) =>
+        this.DataContextChanged += (s, e) =>
         {
             if (DataContext is ProxySettingsViewModel vm)
             {

@@ -1,4 +1,4 @@
-name: Release ProxyBridge Linux
+name: Release JackBridge Linux
 
 on:
   release:
@@ -50,17 +50,17 @@ jobs:
         echo "=== Build Output ==="
         ls -lh Linux/output/
         echo ""
-        if [ -f "Linux/output/libproxybridge.so" ]; then
+        if [ -f "Linux/output/libjackbridge.so" ]; then
           echo "✓ Library built successfully"
-          file Linux/output/libproxybridge.so
+          file Linux/output/libjackbridge.so
         else
           echo "✗ Library build failed"
           exit 1
         fi
         echo ""
-        if [ -f "Linux/output/ProxyBridge" ]; then
+        if [ -f "Linux/output/JackBridge" ]; then
           echo "✓ CLI built successfully"
-          file Linux/output/ProxyBridge
+          file Linux/output/JackBridge
         else
           echo "✗ CLI build failed"
           exit 1
@@ -91,7 +91,7 @@ jobs:
     - name: Create release archive
       run: |
         VERSION="${{ steps.version.outputs.version }}"
-        ARCHIVE_NAME="ProxyBridge-Linux-v${VERSION}.tar.gz"
+        ARCHIVE_NAME="JackBridge-Linux-v${VERSION}.tar.gz"
 
         echo "Creating archive: $ARCHIVE_NAME"
         cd Linux/output
@@ -111,22 +111,22 @@ jobs:
         echo "==================================="
         echo "Release Files:"
         echo "==================================="
-        ls -lh ProxyBridge-Linux-*.tar.gz
+        ls -lh JackBridge-Linux-*.tar.gz
 
         echo ""
         echo "Archive contents:"
-        tar -tzf ProxyBridge-Linux-*.tar.gz
+        tar -tzf JackBridge-Linux-*.tar.gz
       shell: bash
 
     - name: Upload archive to release
       if: github.event_name == 'release'
       uses: softprops/action-gh-release@v1
       with:
-        files: ProxyBridge-Linux-v*.tar.gz
+        files: JackBridge-Linux-v*.tar.gz
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: ProxyBridge-Linux-Release-${{ steps.version.outputs.version }}
-        path: ProxyBridge-Linux-*.tar.gz
+        name: JackBridge-Linux-Release-${{ steps.version.outputs.version }}
+        path: JackBridge-Linux-*.tar.gz
         retention-days: 90

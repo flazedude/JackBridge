@@ -6,7 +6,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo ""
 echo "==================================="
-echo "ProxyBridge Setup Script"
+echo "JackBridge Setup Script"
 echo "==================================="
 echo ""
 
@@ -106,18 +106,18 @@ check_files() {
     echo ""
     echo "Checking for required files..."
     
-    if [ ! -f "$SCRIPT_DIR/libproxybridge.so" ]; then
-        echo "ERROR: libproxybridge.so not found in $SCRIPT_DIR"
+    if [ ! -f "$SCRIPT_DIR/libjackbridge.so" ]; then
+        echo "ERROR: libjackbridge.so not found in $SCRIPT_DIR"
         exit 1
     fi
     
-    if [ ! -f "$SCRIPT_DIR/ProxyBridge" ]; then
-        echo "ERROR: ProxyBridge binary not found in $SCRIPT_DIR"
+    if [ ! -f "$SCRIPT_DIR/JackBridge" ]; then
+        echo "ERROR: JackBridge binary not found in $SCRIPT_DIR"
         exit 1
     fi
     
-    if [ ! -f "$SCRIPT_DIR/ProxyBridgeGUI" ]; then
-         echo "WARNING: ProxyBridgeGUI binary not found in $SCRIPT_DIR - GUI will not be installed"
+    if [ ! -f "$SCRIPT_DIR/JackBridgeGUI" ]; then
+         echo "WARNING: JackBridgeGUI binary not found in $SCRIPT_DIR - GUI will not be installed"
     fi
     
     echo "All files present"
@@ -126,26 +126,26 @@ check_files() {
 # Install files
 install_files() {
     echo ""
-    echo "Installing ProxyBridge..."
+    echo "Installing JackBridge..."
     
     # Create directories if they don't exist
-    mkdir -p "$LIB_PATH" /usr/local/bin /etc/proxybridge
-    chmod 755 /etc/proxybridge
+    mkdir -p "$LIB_PATH" /usr/local/bin /etc/jackbridge
+    chmod 755 /etc/jackbridge
     
     # Copy library
-    echo "Installing libproxybridge.so to $LIB_PATH..."
-    cp "$SCRIPT_DIR/libproxybridge.so" "$LIB_PATH/"
-    chmod 755 "$LIB_PATH/libproxybridge.so"
+    echo "Installing libjackbridge.so to $LIB_PATH..."
+    cp "$SCRIPT_DIR/libjackbridge.so" "$LIB_PATH/"
+    chmod 755 "$LIB_PATH/libjackbridge.so"
     
     # Copy binary
-    echo "Installing ProxyBridge to /usr/local/bin..."
-    cp "$SCRIPT_DIR/ProxyBridge" /usr/local/bin/
-    chmod 755 /usr/local/bin/ProxyBridge
+    echo "Installing JackBridge to /usr/local/bin..."
+    cp "$SCRIPT_DIR/JackBridge" /usr/local/bin/
+    chmod 755 /usr/local/bin/JackBridge
 
-    if [ -f "$SCRIPT_DIR/ProxyBridgeGUI" ]; then
-        echo "Installing ProxyBridgeGUI to /usr/local/bin..."
-        cp "$SCRIPT_DIR/ProxyBridgeGUI" /usr/local/bin/
-        chmod 755 /usr/local/bin/ProxyBridgeGUI 
+    if [ -f "$SCRIPT_DIR/JackBridgeGUI" ]; then
+        echo "Installing JackBridgeGUI to /usr/local/bin..."
+        cp "$SCRIPT_DIR/JackBridgeGUI" /usr/local/bin/
+        chmod 755 /usr/local/bin/JackBridgeGUI 
     fi
     
     echo "Files installed"
@@ -159,9 +159,9 @@ update_ldconfig() {
     # Add /usr/local/lib to ld.so.conf if not already there
     if [ -d /etc/ld.so.conf.d ]; then
         if ! grep -q "^/usr/local/lib" /etc/ld.so.conf.d/* 2>/dev/null; then
-            echo "/usr/local/lib" > /etc/ld.so.conf.d/proxybridge.conf
+            echo "/usr/local/lib" > /etc/ld.so.conf.d/jackbridge.conf
             if [ "$LIB_PATH" = "/usr/local/lib64" ]; then
-                echo "/usr/local/lib64" >> /etc/ld.so.conf.d/proxybridge.conf
+                echo "/usr/local/lib64" >> /etc/ld.so.conf.d/jackbridge.conf
             fi
         fi
     fi
@@ -170,7 +170,7 @@ update_ldconfig() {
     if command -v ldconfig &> /dev/null; then
         ldconfig 2>/dev/null || true
         # Also ensure cache is regenerated
-        ldconfig -v 2>/dev/null | grep -q proxybridge || true
+        ldconfig -v 2>/dev/null | grep -q jackbridge || true
         echo "Library cache updated"
     else
         echo "WARNING: ldconfig not found. You may need to reboot."
@@ -183,27 +183,27 @@ verify_installation() {
     echo "Verifying installation..."
     
     # Check if binary is in PATH
-    if command -v ProxyBridge &> /dev/null; then
-        echo "ProxyBridge binary found in PATH"
+    if command -v JackBridge &> /dev/null; then
+        echo "JackBridge binary found in PATH"
     else
-        echo "ProxyBridge binary not found in PATH"
+        echo "JackBridge binary not found in PATH"
         echo "  You may need to add /usr/local/bin to your PATH"
     fi
     
     # Check if library is loadable
-    if ldd /usr/local/bin/ProxyBridge 2>/dev/null | grep -q "libproxybridge.so"; then
-        if ldd /usr/local/bin/ProxyBridge 2>/dev/null | grep "libproxybridge.so" | grep -q "not found"; then
-            echo "libproxybridge.so not loadable"
+    if ldd /usr/local/bin/JackBridge 2>/dev/null | grep -q "libjackbridge.so"; then
+        if ldd /usr/local/bin/JackBridge 2>/dev/null | grep "libjackbridge.so" | grep -q "not found"; then
+            echo "libjackbridge.so not loadable"
         else
-            echo "libproxybridge.so is loadable"
+            echo "libjackbridge.so is loadable"
         fi
     fi
     
     # Final test - try to run --help
-    if /usr/local/bin/ProxyBridge --help &>/dev/null; then
-        echo "ProxyBridge executable is working"
+    if /usr/local/bin/JackBridge --help &>/dev/null; then
+        echo "JackBridge executable is working"
     else
-        echo "ProxyBridge may have issues - try: sudo ldconfig"
+        echo "JackBridge may have issues - try: sudo ldconfig"
     fi
 }
 
@@ -222,15 +222,15 @@ main() {
     echo "Installation Complete!"
     echo "==================================="
     echo ""
-    echo "You can now run ProxyBridge from anywhere:"
-    echo "  sudo ProxyBridge --help"
-    if [ -f /usr/local/bin/ProxyBridgeGUI ]; then
-       echo "  sudo ProxyBridgeGUI      (Graphical Interface)"
+    echo "You can now run JackBridge from anywhere:"
+    echo "  sudo JackBridge --help"
+    if [ -f /usr/local/bin/JackBridgeGUI ]; then
+       echo "  sudo JackBridgeGUI      (Graphical Interface)"
     fi
-    echo "  sudo ProxyBridge --proxy socks5://IP:PORT --rule \"app:*:*:TCP:PROXY\""
+    echo "  sudo JackBridge --proxy socks5://IP:PORT --rule \"app:*:*:TCP:PROXY\""
     echo ""
     echo "For cleanup after crash:"
-    echo "  sudo ProxyBridge --cleanup"
+    echo "  sudo JackBridge --cleanup"
     echo ""
 }
 

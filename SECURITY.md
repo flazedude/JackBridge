@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-We actively support the following versions of ProxyBridge with security updates:
+We actively support the following versions of JackBridge with security updates:
 
 | Version | Supported          | Platform |
 | ------- | ------------------ | -------- |
@@ -14,7 +14,7 @@ We actively support the following versions of ProxyBridge with security updates:
 
 ## Reporting a Vulnerability
 
-We take the security of ProxyBridge seriously. If you discover a security vulnerability, please follow these steps:
+We take the security of JackBridge seriously. If you discover a security vulnerability, please follow these steps:
 
 ### 🔒 Please DO NOT:
 
@@ -25,13 +25,13 @@ We take the security of ProxyBridge seriously. If you discover a security vulner
 ### ✅ Please DO:
 
 1. **Report privately via GitHub Security Advisories:**
-   - Go to: https://github.com/InterceptSuite/ProxyBridge/security/advisories
+   - Go to: https://github.com/InterceptSuite/JackBridge/security/advisories
    - Click "Report a vulnerability"
    - Fill in the details
 
 2. **Or email directly:**
    - Email: security@interceptsuite.com (if available)
-   - Subject: `[SECURITY] ProxyBridge Vulnerability Report`
+   - Subject: `[SECURITY] JackBridge Vulnerability Report`
 
 ### What to Include
 
@@ -59,29 +59,29 @@ Please provide as much information as possible:
 
 ## Security Considerations
 
-### ProxyBridge Security Model
+### JackBridge Security Model
 
-ProxyBridge is an **open-source project** and does not provide monetary rewards or bug bounty programs for vulnerability reports. Some vulnerabilities may be applicable for CVE assignments through standard disclosure processes.
+JackBridge is an **open-source project** and does not provide monetary rewards or bug bounty programs for vulnerability reports. Some vulnerabilities may be applicable for CVE assignments through standard disclosure processes.
 
-ProxyBridge operates with the following security considerations:
+JackBridge operates with the following security considerations:
 
 #### Windows Architecture
 - **Three Components:**
-  - **ProxyBridgeCore.dll** - Native C library for packet interception (WinDivert-based)
-  - **ProxyBridge.exe** - Avalonia-based GUI application (.NET 10.0)
-  - **ProxyBridge_CLI.exe** - Command-line interface application (.NET 10.0)
+  - **JackBridgeCore.dll** - Native C library for packet interception (WinDivert-based)
+  - **JackBridge.exe** - Avalonia-based GUI application (.NET 10.0)
+  - **JackBridge_CLI.exe** - Command-line interface application (.NET 10.0)
 - **Requires Administrator privileges** to install and run WinDivert kernel driver
 - **Kernel-level packet interception** via WinDivert.sys driver
 - **Local TCP relay server** runs on port 34010 (127.0.0.1 only)
 - **Local UDP relay server** runs on port 34011 (127.0.0.1 only)
 - **No remote access** - relay servers bind to localhost only, not exposed to network
-- **Credential storage** - proxy credentials (username/password) stored in **plaintext** in `%APPDATA%\ProxyBridge\config.json`
-- **Configuration storage** - all rules and settings in JSON format at `%APPDATA%\ProxyBridge\config.json`
+- **Credential storage** - proxy credentials (username/password) stored in **plaintext** in `%APPDATA%\JackBridge\config.json`
+- **Configuration storage** - all rules and settings in JSON format at `%APPDATA%\JackBridge\config.json`
 
 #### macOS Architecture
 - **Two Components:**
-  - **ProxyBridge.app** - SwiftUI-based GUI application (sandboxed)
-  - **ProxyBridge Extension** - Network Extension (System Extension, runs with elevated privileges)
+  - **JackBridge.app** - SwiftUI-based GUI application (sandboxed)
+  - **JackBridge Extension** - Network Extension (System Extension, runs with elevated privileges)
 - **Requires System Extension approval** via System Settings
 - **Network Extension runs as system daemon** - operates at network layer with elevated privileges
 - **App Sandbox** for main GUI application with limited permissions
@@ -90,18 +90,18 @@ ProxyBridge operates with the following security considerations:
   - `com.apple.security.network.client` and `com.apple.security.network.server`
   - `com.apple.security.application-groups` for inter-process communication
 - **Credential storage** - proxy credentials and configuration stored in **UserDefaults** (not Keychain)
-  - UserDefaults stored at: `~/Library/Containers/com.interceptsuite.ProxyBridge/Data/Library/Preferences/`
+  - UserDefaults stored at: `~/Library/Containers/com.interceptsuite.JackBridge/Data/Library/Preferences/`
   - **Not encrypted** - stored in plaintext plist format
 - **No remote access** - all configuration is local via IPC to System Extension
 
 ### Known Limitations
 
 1. **Proxy Credentials - PLAINTEXT STORAGE:**
-   - **Windows:** Stored in **plaintext** in `%APPDATA%\ProxyBridge\config.json`
+   - **Windows:** Stored in **plaintext** in `%APPDATA%\JackBridge\config.json`
      - Username and password visible to anyone with file access
      - Readable by all processes running under the same user
    - **macOS:** Stored in **plaintext** in UserDefaults plist files
-     - Located at: `~/Library/Containers/com.interceptsuite.ProxyBridge/Data/Library/Preferences/`
+     - Located at: `~/Library/Containers/com.interceptsuite.JackBridge/Data/Library/Preferences/`
      - Not using Keychain - credentials stored unencrypted
 
 2. **Local Relay Server (Windows):**
@@ -120,7 +120,7 @@ ProxyBridge operates with the following security considerations:
    - **Impact:** Vulnerabilities in core components could lead to privilege escalation or system compromise
 4. **Local File Access:**
    - Configuration files readable by all local administrators
-   - **Windows:** `%APPDATA%\ProxyBridge\` accessible to user and admins
+   - **Windows:** `%APPDATA%\JackBridge\` accessible to user and admins
    - **macOS:** App Container accessible to user and admins
 
 5. **Third-party Dependencies:**
@@ -139,7 +139,7 @@ ProxyBridge operates with the following security considerations:
 ### Installation
 
 1. **Download from official sources only:**
-   - ✅ GitHub Releases: https://github.com/InterceptSuite/ProxyBridge/releases
+   - ✅ GitHub Releases: https://github.com/InterceptSuite/JackBridge/releases
    - ✅ Official website https://interceptsuite.com
    - ❌ Third-party download sites
 
@@ -203,7 +203,7 @@ Security updates are distributed via:
 - ⭐ **Star** the repository for notifications
 - 👁️ **Watch** releases on GitHub
 - 📧 Subscribe to GitHub Security Advisories
-- 🔔 Enable update checks in ProxyBridge settings
+- 🔔 Enable update checks in JackBridge settings
 
 ## Past Security Advisories
 
@@ -221,11 +221,11 @@ When vulnerabilities are discovered and fixed, they will be listed here with:
 For security concerns:
 - **Private:** GitHub Security Advisories
 - **General:** GitHub Issues (non-security bugs only)
-- **Project:** https://github.com/InterceptSuite/ProxyBridge
+- **Project:** https://github.com/InterceptSuite/JackBridge
 
 ## Acknowledgments
 
-We thank the security research community for helping keep ProxyBridge secure. Special thanks to:
+We thank the security research community for helping keep JackBridge secure. Special thanks to:
 
 - *(Security researchers who responsibly disclose vulnerabilities will be listed here)*
 
@@ -233,4 +233,4 @@ We thank the security research community for helping keep ProxyBridge secure. Sp
 
 **Last Updated:** January 2026
 
-Thank you for helping keep ProxyBridge and our users safe! 🛡️
+Thank you for helping keep JackBridge and our users safe! 🛡️

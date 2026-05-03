@@ -17,7 +17,7 @@ static void free_rule_data(RuleData *rule) {
 
 static void on_rule_delete(GtkWidget *widget, gpointer data) {
     RuleData *rule = (RuleData *)data;
-    ProxyBridge_DeleteRule(rule->id);
+    JackBridge_DeleteRule(rule->id);
     g_rules_list = g_list_remove(g_rules_list, rule);
     free_rule_data(rule);
     save_config();
@@ -27,8 +27,8 @@ static void on_rule_delete(GtkWidget *widget, gpointer data) {
 static void on_rule_toggle(GtkToggleButton *btn, gpointer data) {
     RuleData *rule = (RuleData *)data;
     rule->enabled = gtk_toggle_button_get_active(btn);
-    if (rule->enabled) ProxyBridge_EnableRule(rule->id);
-    else ProxyBridge_DisableRule(rule->id);
+    if (rule->enabled) JackBridge_EnableRule(rule->id);
+    else JackBridge_DisableRule(rule->id);
     save_config();
 }
 
@@ -47,7 +47,7 @@ static void on_save_rule(GtkWidget *widget, gpointer data) {
 
     if (edit_rule) {
         // update backend and local copy
-        ProxyBridge_EditRule(edit_rule->id, proc, hosts, ports, proto, action);
+        JackBridge_EditRule(edit_rule->id, proc, hosts, ports, proto, action);
 
         free(edit_rule->process_name); edit_rule->process_name = strdup(proc);
         free(edit_rule->target_hosts); edit_rule->target_hosts = strdup(hosts);
@@ -56,7 +56,7 @@ static void on_save_rule(GtkWidget *widget, gpointer data) {
         edit_rule->action = action;
     } else {
         // add new rule
-        uint32_t new_id = ProxyBridge_AddRule(proc, hosts, ports, proto, action);
+        uint32_t new_id = JackBridge_AddRule(proc, hosts, ports, proto, action);
         RuleData *new_rule = malloc(sizeof(RuleData));
         new_rule->id = new_id;
         new_rule->process_name = strdup(proc);
@@ -290,8 +290,8 @@ static void on_rule_import_clicked(GtkWidget *widget, gpointer data) {
                     if (strcmp(act_s, "DIRECT") == 0) a = RULE_ACTION_DIRECT;
                     else if (strcmp(act_s, "BLOCK") == 0) a = RULE_ACTION_BLOCK;
 
-                    uint32_t nid = ProxyBridge_AddRule(proc, host, port, p, a);
-                     if (!en) ProxyBridge_DisableRule(nid);
+                    uint32_t nid = JackBridge_AddRule(proc, host, port, p, a);
+                     if (!en) JackBridge_DisableRule(nid);
                     RuleData *nd = malloc(sizeof(RuleData));
                     nd->id = nid; nd->process_name = strdup(proc); nd->target_hosts = strdup(host);
                     nd->target_ports = strdup(port); nd->protocol = p; nd->action = a; nd->enabled = en; nd->selected = false;
@@ -321,7 +321,7 @@ static void on_bulk_delete_clicked(GtkWidget *widget, gpointer data) {
     if (!to_delete) return;
     for (GList *d = to_delete; d != NULL; d = d->next) {
         RuleData *rule = (RuleData *)d->data;
-        ProxyBridge_DeleteRule(rule->id);
+        JackBridge_DeleteRule(rule->id);
         g_rules_list = g_list_remove(g_rules_list, rule);
         free_rule_data(rule);
     }

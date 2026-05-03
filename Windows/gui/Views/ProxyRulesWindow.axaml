@@ -1,31 +1,146 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:ProxyBridge.GUI.ViewModels"
-        xmlns:views="using:ProxyBridge.GUI.Views"
+        xmlns:vm="using:JackBridge.GUI.ViewModels"
+        xmlns:views="using:JackBridge.GUI.Views"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="550"
-        x:Class="ProxyBridge.GUI.Views.ProxyRulesWindow"
+        x:Name="RulesRoot"
+        x:Class="JackBridge.GUI.Views.ProxyRulesWindow"
         x:DataType="vm:ProxyRulesViewModel"
         x:CompileBindings="True"
-        Title="{Binding Loc.ProxyRulesTitle}"
-        Icon="/Assets/logo.ico"
-        Width="1000" Height="550"
-        MinWidth="900" MinHeight="400"
-        Background="#FF2D2D30"
-        WindowStartupLocation="CenterOwner">
+        Background="#FF1E1E1E">
 
-    <Window.Resources>
+    <UserControl.Resources>
         <views:SelectAllTextConverter x:Key="SelectAllTextConverter"/>
         <views:SelectAllIconConverter x:Key="SelectAllIconConverter"/>
-    </Window.Resources>
+        <DataTemplate x:Key="RuleRowTemplate" DataType="{x:Type vm:ProxyRule}">
+            <Border Classes="ruleRow"
+                    Background="#FF232323"
+                    BorderBrush="#FF383838"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Margin="12,8,12,0"
+                    Padding="14,12"
+                    PointerPressed="Rule_PointerPressed"
+                    DragDrop.AllowDrop="True">
+                <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="12">
+                    <CheckBox Grid.Column="0"
+                              IsChecked="{Binding IsSelected}"
+                              VerticalAlignment="Center"/>
+                    <Border Grid.Column="1"
+                            Background="#FF1E1E1E"
+                            BorderBrush="#FF3F3F46"
+                            BorderThickness="1"
+                            CornerRadius="4"
+                            Width="42"
+                            Height="28"
+                            VerticalAlignment="Center">
+                        <TextBlock Text="{Binding SectionIndex}"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="#FFFFFFFF"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel Grid.Column="2"
+                                Spacing="6"
+                                MinWidth="0"
+                                VerticalAlignment="Center">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Grid.Column="0"
+                                       Text="{Binding ProcessName}"
+                                       FontSize="15"
+                                       FontWeight="SemiBold"
+                                       Foreground="#FFEDEDED"
+                                       TextTrimming="CharacterEllipsis"/>
+                            <CheckBox Grid.Column="1"
+                                      Content="{Binding $parent[ItemsControl].((vm:ProxyRulesViewModel)DataContext).Loc.EnabledLabel}"
+                                      IsChecked="{Binding IsEnabled}"
+                                      Foreground="#FFB0B0B0"
+                                      Margin="12,0,0,0"/>
+                        </Grid>
+                        <WrapPanel>
+                            <TextBlock Text="{Binding TargetHosts, StringFormat='Host: {0}'}"
+                                       FontSize="12"
+                                       Foreground="#FFB0B0B0"
+                                       Margin="0,0,14,0"/>
+                            <TextBlock Text="{Binding TargetPorts, StringFormat='Port: {0}'}"
+                                       FontSize="12"
+                                       Foreground="#FFB0B0B0"
+                                       Margin="0,0,14,0"/>
+                            <TextBlock Text="{Binding Protocol, StringFormat='Protocol: {0}'}"
+                                       FontSize="12"
+                                       Foreground="#FFB0B0B0"
+                                       Margin="0,0,14,0"/>
+                            <TextBlock Text="{Binding Action}"
+                                       FontSize="12"
+                                       FontWeight="SemiBold"
+                                       Foreground="#FF4EC9B0"
+                                       Margin="0,0,14,0"/>
+                        </WrapPanel>
+                    </StackPanel>
+                    <WrapPanel Grid.Column="3"
+                               HorizontalAlignment="Right"
+                               VerticalAlignment="Center">
+                        <Button Content="Up"
+                                Command="{Binding $parent[ItemsControl].((vm:ProxyRulesViewModel)DataContext).MoveRuleUpCommand}"
+                                CommandParameter="{Binding}"
+                                Padding="6,4"
+                                MinWidth="34"
+                                FontSize="12"
+                                Margin="0,0,6,6"
+                                Classes="secondary"/>
+                        <Button Content="Down"
+                                Command="{Binding $parent[ItemsControl].((vm:ProxyRulesViewModel)DataContext).MoveRuleDownCommand}"
+                                CommandParameter="{Binding}"
+                                Padding="6,4"
+                                MinWidth="44"
+                                FontSize="12"
+                                Margin="0,0,6,6"
+                                Classes="secondary"/>
+                        <Button Content="Edit"
+                                Command="{Binding $parent[ItemsControl].((vm:ProxyRulesViewModel)DataContext).EditRuleCommand}"
+                                CommandParameter="{Binding}"
+                                Padding="6,4"
+                                MinWidth="48"
+                                Margin="0,0,6,6"
+                                FontSize="12"/>
+                        <Button Content="Delete"
+                                Command="{Binding $parent[ItemsControl].((vm:ProxyRulesViewModel)DataContext).DeleteRuleCommand}"
+                                CommandParameter="{Binding}"
+                                Padding="6,4"
+                                MinWidth="54"
+                                FontSize="12"
+                                Margin="0,0,0,6"
+                                Classes="secondary"/>
+                    </WrapPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
+    </UserControl.Resources>
 
-    <DockPanel>
+    <UserControl.Styles>
+        <Style Selector="Border.ruleRow.dragging">
+            <Setter Property="Opacity" Value="0.55"/>
+            <Setter Property="Background" Value="#FF1F3A4A"/>
+        </Style>
+
+        <Style Selector="Border.ruleRow.dropTarget">
+            <Setter Property="Background" Value="#FF173D32"/>
+            <Setter Property="BorderBrush" Value="#FF4EC9B0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+    </UserControl.Styles>
+
+    <DockPanel Width="{Binding #RulesRoot.Bounds.Width}"
+               HorizontalAlignment="Stretch"
+               VerticalAlignment="Stretch">
         <!-- Header -->
         <Border DockPanel.Dock="Top" Background="#FF1E1E1E" Padding="20,16">
             <Grid ColumnDefinitions="*,Auto">
                 <StackPanel Orientation="Horizontal" Spacing="10">
-                    <TextBlock Text="⚙" FontSize="22" VerticalAlignment="Center"/>
+                    <TextBlock Text="Rules" FontSize="13" VerticalAlignment="Center" Foreground="#FFB0B0B0"/>
                     <TextBlock Text="{Binding Loc.ProxyRulesTitle}"
                                FontSize="18"
                                FontWeight="SemiBold"
@@ -52,17 +167,14 @@
                             Classes="secondary"
                             Padding="12,8"
                             IsEnabled="{Binding HasSelectedRules}">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <TextBlock Text="🗑" FontSize="14"/>
-                            <TextBlock Text="Delete Selected"/>
-                        </StackPanel>
+                        <TextBlock Text="Delete Selected"/>
                     </Button>
                     <Button Command="{Binding ExportRulesCommand}"
                             Classes="secondary"
                             Padding="12,8"
                             IsEnabled="{Binding HasSelectedRules}">
                         <StackPanel Orientation="Horizontal" Spacing="6">
-                            <TextBlock Text="↑" FontSize="14"/>
+                            <TextBlock Text="" FontSize="14"/>
                             <TextBlock Text="Export"/>
                         </StackPanel>
                     </Button>
@@ -70,7 +182,7 @@
                             Classes="secondary"
                             Padding="12,8">
                         <StackPanel Orientation="Horizontal" Spacing="6">
-                            <TextBlock Text="↓" FontSize="14"/>
+                            <TextBlock Text="" FontSize="14"/>
                             <TextBlock Text="Import"/>
                         </StackPanel>
                     </Button>
@@ -81,161 +193,72 @@
         </Border>
 
         <!-- Rules List View -->
-        <Grid IsVisible="{Binding !IsAddRuleViewOpen}">
+        <Grid IsVisible="{Binding !IsAddRuleViewOpen}"
+              Width="{Binding #RulesRoot.Bounds.Width}"
+              HorizontalAlignment="Stretch"
+              Background="#FF1E1E1E">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- Table Header -->
+            <!-- Rules Header -->
             <Border Grid.Row="0"
                     Background="#FF1E1E1E"
                     BorderBrush="#FF3F3F46"
                     BorderThickness="0,1,0,1"
-                    Padding="20,12">
-                <Grid ColumnDefinitions="60,80,140,60,200,150,120,80,*">
-                    <TextBlock Grid.Column="0"
-                               Text="Select"
-                               FontSize="13"
-                               FontWeight="SemiBold"
-                               Foreground="#FFB0B0B0"
-                               Margin="0,0,10,0"/>
-                    <TextBlock Grid.Column="1"
-                               Text="{Binding Loc.EnabledLabel}"
-                               FontSize="13"
-                               FontWeight="SemiBold"
-                               Foreground="#FFB0B0B0"
-                               Margin="0,0,10,0"/>
-                    <TextBlock Grid.Column="2"
-                               Text="{Binding Loc.ActionsLabel}"
-                               FontSize="13"
-                               FontWeight="SemiBold"
-                               Foreground="#FFB0B0B0"
-                               Margin="0,0,10,0"/>
-                    <TextBlock Grid.Column="3"
-                               Text="{Binding Loc.SRLabel}"
-                               FontSize="13"
-                               FontWeight="SemiBold"
-                               Foreground="#FFB0B0B0"
-                               Margin="0,0,10,0"/>
-                    <TextBlock Grid.Column="4"
-                               Text="{Binding Loc.ProcessLabel}"
-                               FontSize="13"
-                               FontWeight="SemiBold"
-                               Foreground="#FFB0B0B0"
-                               Margin="0,0,10,0"/>
-                    <TextBlock Grid.Column="5"
-                               Text="{Binding Loc.TargetHostsLabel}"
-                               FontSize="13"
-                               FontWeight="SemiBold"
-                               Foreground="#FFB0B0B0"
-                               Margin="0,0,10,0"/>
-                    <TextBlock Grid.Column="6"
-                               Text="{Binding Loc.TargetPortsLabel}"
-                               FontSize="13"
-                               FontWeight="SemiBold"
-                               Foreground="#FFB0B0B0"
-                               Margin="0,0,10,0"/>
-                    <TextBlock Grid.Column="7"
-                               Text="{Binding Loc.ProtocolLabel}"
-                               FontSize="13"
-                               FontWeight="SemiBold"
-                               Foreground="#FFB0B0B0"
-                               Margin="0,0,10,0"/>
-                    <TextBlock Grid.Column="8"
-                               Text="{Binding Loc.ActionLabel}"
-                               FontSize="13"
-                               FontWeight="SemiBold"
-                               Foreground="#FFB0B0B0"/>
-                </Grid>
+                    Padding="18,10">
+                <TextBlock Text="Priority order: top rules are handled first"
+                           FontSize="13"
+                           FontWeight="SemiBold"
+                           Foreground="#FFB0B0B0"
+                           VerticalAlignment="Center"/>
             </Border>
 
             <!-- Table Body -->
             <ScrollViewer Grid.Row="1"
-                          HorizontalScrollBarVisibility="Auto"
+                          Background="#FF1E1E1E"
+                          HorizontalAlignment="Stretch"
+                          HorizontalScrollBarVisibility="Disabled"
                           VerticalScrollBarVisibility="Auto">
-                <ItemsControl ItemsSource="{Binding ProxyRules}" x:Name="RulesItemsControl">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Border Background="#FF252526"
-                                    BorderBrush="#FF3F3F46"
-                                    BorderThickness="0,0,0,1"
-                                    Padding="20,16"
-                                    PointerPressed="Rule_PointerPressed"
-                                    DragDrop.AllowDrop="True">
-                                <Grid ColumnDefinitions="60,80,140,60,200,150,120,80,*">
-                                    <CheckBox Grid.Column="0"
-                                              IsChecked="{Binding IsSelected}"
-                                              VerticalAlignment="Center"
-                                              Margin="0,0,10,0"/>
-                                    <CheckBox Grid.Column="1"
-                                              IsChecked="{Binding IsEnabled}"
-                                              VerticalAlignment="Center"
-                                              Margin="0,0,10,0"/>
-                                    <StackPanel Grid.Column="2"
-                                                Orientation="Horizontal"
-                                                Spacing="8"
-                                                VerticalAlignment="Center"
-                                                Margin="0,0,10,0">
-                                        <Button Content="{Binding $parent[ItemsControl].((vm:ProxyRulesViewModel)DataContext).Loc.ButtonEdit, StringFormat='✏ {0}'}"
-                                                Command="{Binding $parent[ItemsControl].((vm:ProxyRulesViewModel)DataContext).EditRuleCommand}"
-                                                CommandParameter="{Binding}"
-                                                Padding="8,4"
-                                                MinWidth="60"
-                                                FontSize="12"/>
-                                        <Button Content="{Binding $parent[ItemsControl].((vm:ProxyRulesViewModel)DataContext).Loc.ButtonDelete, StringFormat='🗑 {0}'}"
-                                                Command="{Binding $parent[ItemsControl].((vm:ProxyRulesViewModel)DataContext).DeleteRuleCommand}"
-                                                CommandParameter="{Binding}"
-                                                Padding="8,4"
-                                                MinWidth="60"
-                                                FontSize="12"
-                                                Classes="secondary"/>
-                                    </StackPanel>
-                                    <TextBlock Grid.Column="3"
-                                               Text="{Binding Index}"
-                                               FontSize="14"
-                                               Foreground="#FF999999"
-                                               VerticalAlignment="Center"
-                                               Margin="0,0,10,0"/>
-                                    <TextBlock Grid.Column="4"
-                                               Text="{Binding ProcessName}"
-                                               FontSize="14"
-                                               FontWeight="Medium"
-                                               Foreground="#FFE0E0E0"
-                                               VerticalAlignment="Center"
-                                               TextTrimming="CharacterEllipsis"
-                                               Margin="0,0,10,0"/>
-                                    <TextBlock Grid.Column="5"
-                                               Text="{Binding TargetHosts}"
-                                               FontSize="13"
-                                               Foreground="#FF999999"
-                                               VerticalAlignment="Center"
-                                               TextTrimming="CharacterEllipsis"
-                                               Margin="0,0,10,0"/>
-                                    <TextBlock Grid.Column="6"
-                                               Text="{Binding TargetPorts}"
-                                               FontSize="13"
-                                               Foreground="#FF999999"
-                                               VerticalAlignment="Center"
-                                               TextTrimming="CharacterEllipsis"
-                                               Margin="0,0,10,0"/>
-                                    <TextBlock Grid.Column="7"
-                                               Text="{Binding Protocol}"
-                                               FontSize="13"
-                                               Foreground="#FF999999"
-                                               VerticalAlignment="Center"
-                                               Margin="0,0,10,0"/>
-                                    <TextBlock Grid.Column="8"
-                                               Text="{Binding Action}"
-                                               FontSize="14"
-                                               FontWeight="SemiBold"
-                                               Foreground="#FF4EC9B0"
-                                               VerticalAlignment="Center"/>
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                <DockPanel LastChildFill="True"
+                           Width="{Binding #RulesRoot.Bounds.Width}"
+                           HorizontalAlignment="Stretch">
+                    <StackPanel DockPanel.Dock="Top"
+                                HorizontalAlignment="Stretch">
+                        <Border Background="#FF191919"
+                                Padding="14,10"
+                                BorderBrush="#FF333333"
+                                BorderThickness="0,0,0,1">
+                            <TextBlock Text="Active rules"
+                                       FontSize="13"
+                                       FontWeight="SemiBold"
+                                       Foreground="#FF4EC9B0"/>
+                        </Border>
+                        <ItemsControl ItemsSource="{Binding ActiveRules}"
+                                      HorizontalAlignment="Stretch"
+                                      ItemTemplate="{StaticResource RuleRowTemplate}"
+                                      x:Name="ActiveRulesItemsControl"/>
+                    </StackPanel>
+
+                    <StackPanel DockPanel.Dock="Top"
+                                HorizontalAlignment="Stretch">
+                        <Border Background="#FF191919"
+                                Padding="14,10"
+                                BorderBrush="#FF333333"
+                                BorderThickness="0,1,0,1">
+                            <TextBlock Text="Static rules"
+                                       FontSize="13"
+                                       FontWeight="SemiBold"
+                                       Foreground="#FFB0B0B0"/>
+                        </Border>
+                        <ItemsControl ItemsSource="{Binding StaticRules}"
+                                      HorizontalAlignment="Stretch"
+                                      ItemTemplate="{StaticResource RuleRowTemplate}"
+                                      x:Name="StaticRulesItemsControl"/>
+                    </StackPanel>
+                    <Border Background="#FF1E1E1E"/>
+                </DockPanel>
             </ScrollViewer>
         </Grid>
 
@@ -259,11 +282,31 @@
                                 Padding="12,8"
                                 MinWidth="100"/>
                     </Grid>
+                    <ComboBox ItemsSource="{Binding RunningProcesses}"
+                              SelectedItem="{Binding SelectedProcessChoice}"
+                              HorizontalAlignment="Stretch"
+                              PlaceholderText="Choose a running process">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding DisplayName}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
                     <TextBlock Text="{Binding Loc.ExampleApplications}"
                                FontSize="11"
                                Foreground="#FF999999"
                                TextWrapping="Wrap"
                                Margin="0,4,0,0"/>
+                </StackPanel>
+
+                <!-- Rule Section -->
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Rule section" Classes="label"/>
+                    <ComboBox SelectedIndex="{Binding NewRuleSectionIndex}"
+                              HorizontalAlignment="Stretch">
+                        <ComboBoxItem Content="Active - prioritized app-specific rules"/>
+                        <ComboBoxItem Content="Static - always-on fallback rules"/>
+                    </ComboBox>
                 </StackPanel>
 
                 <!-- Target Hosts Section -->
@@ -336,4 +379,7 @@
             </StackPanel>
         </ScrollViewer>
     </DockPanel>
-</Window>
+</UserControl>
+
+
+

@@ -1,5 +1,5 @@
-#ifndef PROXYBRIDGE_GUI_H
-#define PROXYBRIDGE_GUI_H
+#ifndef JACKBRIDGE_GUI_H
+#define JACKBRIDGE_GUI_H
 
 #include <unistd.h>
 #include <gtk/gtk.h>
@@ -12,7 +12,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
-#include "ProxyBridge.h"
+#include "JackBridge.h"
 typedef struct {
     char *process_name;
     uint32_t pid;

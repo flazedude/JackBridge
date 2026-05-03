@@ -1,4 +1,4 @@
-# ProxyBridge for Windows
+# JackBridge for Windows
 
 Universal proxy client for Windows applications - Route any application through SOCKS5/HTTP proxies without configuration.
 
@@ -24,10 +24,10 @@ Universal proxy client for Windows applications - Route any application through 
 
 ## Installation
 
-1. Download the latest `ProxyBridge-Installer-vX.X.X.exe` from the [Releases](https://github.com/InterceptSuite/ProxyBridge/releases) page
+1. Download the latest `JackBridge-Installer-vX.X.X.exe` from the [Releases](https://github.com/InterceptSuite/JackBridge/releases) page
 2. Run the installer with Administrator privileges
 3. The installer will:
-   - Install ProxyBridge to `C:\Program Files\ProxyBridge`
+   - Install JackBridge to `C:\Program Files\JackBridge`
    - Add the CLI to your system PATH for easy command-line access
    - Create Start Menu shortcuts for the GUI application
    - Include all required dependencies (WinDivert driver)
@@ -39,7 +39,7 @@ Universal proxy client for Windows applications - Route any application through 
 
 ### GUI Application
 
-Launch `ProxyBridge.exe` (GUI) with Administrator privileges for an intuitive graphical interface to:
+Launch `JackBridge.exe` (GUI) with Administrator privileges for an intuitive graphical interface to:
 
 #### Proxy Settings
 
@@ -108,7 +108,7 @@ Launch `ProxyBridge.exe` (GUI) with Administrator privileges for an intuitive gr
 
 #### Exporting and Importing Rules
 
-ProxyBridge allows you to export selected rules to a JSON file and import rules from previously exported files, making it easy to share configurations between systems or back up your rule sets.
+JackBridge allows you to export selected rules to a JSON file and import rules from previously exported files, making it easy to share configurations between systems or back up your rule sets.
 
 **Export Rules:**
 1. In the **Proxy Rules** window, select one or more rules using the checkboxes in the **Select** column
@@ -148,7 +148,7 @@ ProxyBridge allows you to export selected rules to a JSON file and import rules 
 #### Activity Monitoring
 
 <p align="center">
-  <img src="../img/ProxyBridge.png" alt="Active Connections" width="600"/>
+  <img src="../img/JackBridge.png" alt="Active Connections" width="600"/>
 </p>
 
 - View real-time connection activity in the **Connections** tab
@@ -167,42 +167,42 @@ The CLI provides powerful automation and scripting capabilities with rule-based 
 #### Basic Usage
 ```powershell
 # Help menu
-ProxyBridge_CLI -h
+JackBridge_CLI -h
 
 # Use custom HTTP proxy
-ProxyBridge_CLI --proxy http://192.168.1.100:8080
+JackBridge_CLI --proxy http://192.168.1.100:8080
 
 # Route Chrome through socks5 proxy
-ProxyBridge_CLI --proxy socks5://127.0.0.1:1080 --rule "chrome.exe:*:*:TCP:PROXY"
+JackBridge_CLI --proxy socks5://127.0.0.1:1080 --rule "chrome.exe:*:*:TCP:PROXY"
 
 # Route multiple processes in single rule (semicolon-separated)
-ProxyBridge_CLI --proxy http://127.0.0.1:8080 --rule "chrome.exe;steam*.exe:*:*:TCP:PROXY"
+JackBridge_CLI --proxy http://127.0.0.1:8080 --rule "chrome.exe;steam*.exe:*:*:TCP:PROXY"
 
 # Multiple rules with verbose connection logging
-ProxyBridge_CLI --proxy http://127.0.0.1:8080 --rule "chrome.exe;steam*.exe:*:*:TCP:PROXY" --rule "firefox.exe:*:*:TCP:PROXY" --verbose 2
+JackBridge_CLI --proxy http://127.0.0.1:8080 --rule "chrome.exe;steam*.exe:*:*:TCP:PROXY" --rule "firefox.exe:*:*:TCP:PROXY" --verbose 2
 
 # Block specific application from internet access
-ProxyBridge_CLI --rule "malware.exe:*:*:BOTH:BLOCK"
+JackBridge_CLI --rule "malware.exe:*:*:BOTH:BLOCK"
 
 # Route specific apps through proxy, block everything else
-ProxyBridge_CLI --rule "chrome.exe:*:*:TCP:PROXY" --rule "firefox.exe:*:*:TCP:PROXY" --rule "*:*:*:BOTH:BLOCK"
+JackBridge_CLI --rule "chrome.exe:*:*:TCP:PROXY" --rule "firefox.exe:*:*:TCP:PROXY" --rule "*:*:*:BOTH:BLOCK"
 
 # Route all through proxy except proxy app itself
-ProxyBridge_CLI --rule "*:*:*:TCP:PROXY" --rule "BurpSuiteCommunity.exe:*:*:TCP:DIRECT"
+JackBridge_CLI --rule "*:*:*:TCP:PROXY" --rule "BurpSuiteCommunity.exe:*:*:TCP:DIRECT"
 
 # Target specific IPs and ports
-ProxyBridge_CLI --rule "chrome.exe:192.168.*.*;10.10.*.*:80;443;8080:TCP:PROXY"
+JackBridge_CLI --rule "chrome.exe:192.168.*.*;10.10.*.*:80;443;8080:TCP:PROXY"
 
 # Import rules from JSON file
-ProxyBridge_CLI --proxy socks5://127.0.0.1:1080 --rule-file C:\rules.json
+JackBridge_CLI --proxy socks5://127.0.0.1:1080 --rule-file C:\rules.json
 
 # Combine file-based rules with command-line rules
-ProxyBridge_CLI --rule-file C:\rules.json --rule "steam.exe:*:*:TCP:PROXY"
+JackBridge_CLI --rule-file C:\rules.json --rule "steam.exe:*:*:TCP:PROXY"
 ```
 
 #### Command Line Options
 ```
-ProxyBridge_CLI.exe -h
+JackBridge_CLI.exe -h
 
   ____                        ____       _     _
  |  _ \ _ __ _____  ___   _  | __ ) _ __(_) __| | __ _  ___
@@ -214,13 +214,13 @@ ProxyBridge_CLI.exe -h
   Universal proxy client for Windows applications
 
         Author: Sourav Kalal/InterceptSuite
-        GitHub: https://github.com/InterceptSuite/ProxyBridge
+        GitHub: https://github.com/InterceptSuite/JackBridge
 
 Description:
-  ProxyBridge - Universal proxy client for Windows applications
+  JackBridge - Universal proxy client for Windows applications
 
 Usage:
-  ProxyBridge_CLI [command] [options]
+  JackBridge_CLI [command] [options]
 
 Options:
   --proxy <proxy>          Proxy server URL with optional authentication
@@ -290,14 +290,14 @@ Commands:
 # Allow direct connection (bypass proxy)
 --rule "BurpSuiteCommunity.exe:*:*:TCP:DIRECT"
 
---rule-file "C:\proxybridge-rule.json"
+--rule-file "C:\jackbridge-rule.json"
 ```
 
 **Notes:**
 - After installation, the CLI is available from any terminal (no `.\` prefix needed)
 - Process names are case-insensitive
 - Use `*` as the process name to set a default action for all traffic
-- Press `Ctrl+C` to stop ProxyBridge
+- Press `Ctrl+C` to stop JackBridge
 
 ## Use Cases
 
@@ -354,17 +354,17 @@ Commands:
 
   These addresses and ports are used by system components, network discovery, and essential Windows services. While proxy rules are automatically overridden to DIRECT for these targets, you can still define rules with DIRECT or BLOCK actions to explicitly control or block this traffic.
 
-- **UDP Proxy Requirements**: UDP traffic only works when a SOCKS5 proxy is configured. If an HTTP proxy server is configured, ProxyBridge will ignore UDP proxy rules and route UDP traffic as direct connection instead. This limitation does not affect UDP rules with BLOCK or DIRECT actions.
+- **UDP Proxy Requirements**: UDP traffic only works when a SOCKS5 proxy is configured. If an HTTP proxy server is configured, JackBridge will ignore UDP proxy rules and route UDP traffic as direct connection instead. This limitation does not affect UDP rules with BLOCK or DIRECT actions.
 
   **Important UDP Considerations**:
   - Configuring a SOCKS5 proxy does not guarantee UDP will work. Most SOCKS5 proxies do not support UDP traffic, including SSH SOCKS5 proxies.
-  - The SOCKS5 proxy must support UDP ASSOCIATE command. If ProxyBridge fails to establish a UDP association with the SOCKS5 proxy, packets will fail to connect.
+  - The SOCKS5 proxy must support UDP ASSOCIATE command. If JackBridge fails to establish a UDP association with the SOCKS5 proxy, packets will fail to connect.
   - Many UDP applications use HTTP/3 and DTLS protocols. Even if your SOCKS5 proxy supports UDP ASSOCIATE, ensure it can handle DTLS and HTTP/3 UDP traffic, as they require separate handling beyond raw UDP packets.
-  - **Testing UDP/HTTP3/DTLS Support**: If you need to test UDP, HTTP/3, and DTLS support with a SOCKS5 proxy, try [Nexus Proxy](https://github.com/InterceptSuite/nexus-proxy) - a proxy application created specifically to test ProxyBridge with advanced UDP protocols.
+  - **Testing UDP/HTTP3/DTLS Support**: If you need to test UDP, HTTP/3, and DTLS support with a SOCKS5 proxy, try [Nexus Proxy](https://github.com/InterceptSuite/nexus-proxy) - a proxy application created specifically to test JackBridge with advanced UDP protocols.
 
 ## How It Works
 
-ProxyBridge use Windivert to inspect all TCP/UDP packets and use rules from user to perform action on them
+JackBridge use Windivert to inspect all TCP/UDP packets and use rules from user to perform action on them
 
 Case 1: Packet does not match any rules
 
@@ -383,8 +383,8 @@ Case 2: Packet match with proxy rule
 **Traffic Flow:**
 1. **Applications Generate Traffic** - User-mode applications (Chrome, Discord, Games, Services) create TCP/UDP packets
 2. **Kernel Interception** - WinDivert.sys driver intercepts ALL outbound packets at kernel level
-3. **User-Mode Delivery** - WinDivert.dll receives intercepted packets and delivers them to ProxyBridge
-4. **Rule Evaluation** - ProxyBridge inspects each packet and applies configured rules:
+3. **User-Mode Delivery** - WinDivert.dll receives intercepted packets and delivers them to JackBridge
+4. **Rule Evaluation** - JackBridge inspects each packet and applies configured rules:
    - **BLOCK** → Packet is dropped (no network access)
    - **DIRECT** → Packet is re-injected unchanged (direct connection)
    - **NO MATCH** → Packet is re-injected unchanged (direct connection)
@@ -399,7 +399,7 @@ Case 2: Packet match with proxy rule
 **Key Points:**
 - All packet manipulation happens transparently - applications remain completely unaware
 - WinDivert operates at kernel level for reliable interception before packets reach the network
-- ProxyBridge rule engine provides granular control over which traffic gets proxied
+- JackBridge rule engine provides granular control over which traffic gets proxied
 - TCP/UDP relay servers handle protocol conversion between raw sockets and proxy protocols
 
 
@@ -413,11 +413,11 @@ Case 2: Packet match with proxy rule
 - WinDivert 2.2.2-A or later
 - GCC (MinGW-w64) or MSVC compiler
 
-If you prefer to build ProxyBridge from source:
+If you prefer to build JackBridge from source:
 
 1. Download WinDivert 2.2.2-A from the [official website](https://reqrypt.org/windivert.html)
 2. Extract WinDivert to a known location (e.g., `C:\WinDivert-2.2.2-A`)
-3. Clone or download ProxyBridge source code
+3. Clone or download JackBridge source code
 4. Compile using one of the methods below:
 
 ### Using PowerShell Script
@@ -427,10 +427,10 @@ If you prefer to build ProxyBridge from source:
 
 ### Using GCC Directly
 ```powershell
-gcc -O2 -Wall -D_WIN32_WINNT=0x0601 -I"C:\WinDivert-2.2.2-A\include" ProxyBridge.c -L"C:\WinDivert-2.2.2-A\x64" -lWinDivert -lws2_32 -liphlpapi -o ProxyBridge.exe
+gcc -O2 -Wall -D_WIN32_WINNT=0x0601 -I"C:\WinDivert-2.2.2-A\include" JackBridge.c -L"C:\WinDivert-2.2.2-A\x64" -lWinDivert -lws2_32 -liphlpapi -o JackBridge.exe
 ```
 
-5. Run `ProxyBridge.exe` with Administrator privileges
+5. Run `JackBridge.exe` with Administrator privileges
 
 ## License
 

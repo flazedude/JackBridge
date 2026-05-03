@@ -22,21 +22,21 @@ bool g_chk_dns = true;
 
 static void on_log_traffic_toggled(GtkCheckMenuItem *item, gpointer data) {
     bool active = gtk_check_menu_item_get_active(item);
-    ProxyBridge_SetTrafficLoggingEnabled(active);
+    JackBridge_SetTrafficLoggingEnabled(active);
     g_chk_logging = active;
     save_config();
 }
 
 static void on_dns_proxy_toggled(GtkCheckMenuItem *item, gpointer data) {
     bool active = gtk_check_menu_item_get_active(item);
-    ProxyBridge_SetDnsViaProxy(active);
+    JackBridge_SetDnsViaProxy(active);
     g_chk_dns = active;
     save_config();
 }
 
 static void on_create_update_script_and_run() {
-    ProxyBridge_Stop();
-    const char *script_url = "https://raw.githubusercontent.com/InterceptSuite/ProxyBridge/refs/heads/master/Linux/deploy.sh";
+    JackBridge_Stop();
+    const char *script_url = "https://raw.githubusercontent.com/InterceptSuite/JackBridge/refs/heads/master/Linux/deploy.sh";
     char tmp_dir_tpl[] = "/tmp/pb_update_XXXXXX";
     char *tmp_dir = mkdtemp(tmp_dir_tpl);
     if (!tmp_dir) { fprintf(stderr, "Failed to create temp directory for update.\n"); exit(1); }
@@ -54,8 +54,8 @@ static void on_create_update_script_and_run() {
 }
 
 static void on_check_update(GtkWidget *widget, gpointer data) {
-    const char *url = "https://api.github.com/repos/InterceptSuite/ProxyBridge/releases/latest";
-    char *cmd = g_strdup_printf("curl -s -H \"User-Agent: ProxyBridge-Linux\" %s", url);
+    const char *url = "https://api.github.com/repos/InterceptSuite/JackBridge/releases/latest";
+    char *cmd = g_strdup_printf("curl -s -H \"User-Agent: JackBridge-Linux\" %s", url);
     char *standard_output = NULL;
     char *standard_error = NULL;
     GError *error = NULL;
@@ -70,11 +70,11 @@ static void on_check_update(GtkWidget *widget, gpointer data) {
     g_free(standard_output); g_free(standard_error);
 
     if (!tag_name) { show_message(GTK_WINDOW(window), GTK_MESSAGE_WARNING, "Could not parse version info."); return; }
-    char *current_tag = g_strdup_printf("v%s", PROXYBRIDGE_VERSION);
+    char *current_tag = g_strdup_printf("v%s", JACKBRIDGE_VERSION);
 
-    if (strcmp(tag_name, current_tag) == 0) { show_message(GTK_WINDOW(window), GTK_MESSAGE_INFO, "You are using the latest version (%s).", PROXYBRIDGE_VERSION); }
+    if (strcmp(tag_name, current_tag) == 0) { show_message(GTK_WINDOW(window), GTK_MESSAGE_INFO, "You are using the latest version (%s).", JACKBRIDGE_VERSION); }
     else {
-        GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(window), GTK_DIALOG_DESTROY_WITH_PARENT, GTK_MESSAGE_QUESTION, GTK_BUTTONS_NONE, "New version %s is available!\nCurrent: %s\n\nUpdate now?", tag_name, PROXYBRIDGE_VERSION);
+        GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(window), GTK_DIALOG_DESTROY_WITH_PARENT, GTK_MESSAGE_QUESTION, GTK_BUTTONS_NONE, "New version %s is available!\nCurrent: %s\n\nUpdate now?", tag_name, JACKBRIDGE_VERSION);
         gtk_dialog_add_button(GTK_DIALOG(dialog), "Download Now", GTK_RESPONSE_ACCEPT);
         gtk_dialog_add_button(GTK_DIALOG(dialog), "Close", GTK_RESPONSE_CANCEL);
         int resp = gtk_dialog_run(GTK_DIALOG(dialog));
@@ -85,18 +85,18 @@ static void on_check_update(GtkWidget *widget, gpointer data) {
 }
 
 static void on_about(GtkWidget *widget, gpointer data) {
-    GtkWidget *dialog = gtk_dialog_new_with_buttons("About ProxyBridge", GTK_WINDOW(window), GTK_DIALOG_DESTROY_WITH_PARENT | GTK_DIALOG_MODAL, "OK", GTK_RESPONSE_OK, NULL);
+    GtkWidget *dialog = gtk_dialog_new_with_buttons("About JackBridge", GTK_WINDOW(window), GTK_DIALOG_DESTROY_WITH_PARENT | GTK_DIALOG_MODAL, "OK", GTK_RESPONSE_OK, NULL);
     gtk_window_set_default_size(GTK_WINDOW(dialog), 400, 300);
     GtkWidget *content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
     gtk_container_set_border_width(GTK_CONTAINER(content_area), 20);
     char *markup = g_strdup_printf(
-        "<span size='xx-large' weight='bold'>ProxyBridge</span>\n"
+        "<span size='xx-large' weight='bold'>JackBridge</span>\n"
         "<span color='gray'>Version %s</span>\n\n"
         "Universal proxy client for Linux applications\n\n"
         "Author: Sourav Kalal / InterceptSuite\n\n"
         "Website: <a href=\"https://interceptsuite.com\">interceptsuite.com</a>\n"
-        "GitHub: <a href=\"https://github.com/InterceptSuite/ProxyBridge\">InterceptSuite/ProxyBridge</a>\n\n"
-        "License: MIT", PROXYBRIDGE_VERSION);
+        "GitHub: <a href=\"https://github.com/InterceptSuite/JackBridge\">InterceptSuite/JackBridge</a>\n\n"
+        "License: MIT", JACKBRIDGE_VERSION);
     GtkWidget *label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), markup);
     gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_CENTER);
@@ -108,13 +108,13 @@ static void on_about(GtkWidget *widget, gpointer data) {
 }
 
 static void signal_handler(int sig) {
-    fprintf(stderr, "\nSignal %d received. Stopping ProxyBridge...\n", sig);
-    ProxyBridge_Stop();
+    fprintf(stderr, "\nSignal %d received. Stopping JackBridge...\n", sig);
+    JackBridge_Stop();
     exit(sig);
 }
 
 static void on_window_destroy(GtkWidget *widget, gpointer data) {
-    ProxyBridge_Stop();
+    JackBridge_Stop();
     gtk_main_quit();
 }
 
@@ -123,7 +123,7 @@ int main(int argc, char *argv[]) {
     signal(SIGTERM, signal_handler);
     signal(SIGSEGV, signal_handler);
 
-    if (getuid() != 0) { gtk_init(&argc, &argv); show_message(NULL, GTK_MESSAGE_ERROR, "ProxyBridge must be run as root (sudo)."); return 1; }
+    if (getuid() != 0) { gtk_init(&argc, &argv); show_message(NULL, GTK_MESSAGE_ERROR, "JackBridge must be run as root (sudo)."); return 1; }
     setenv("GSETTINGS_BACKEND", "memory", 1);
 
     // load config from file
@@ -135,7 +135,7 @@ int main(int argc, char *argv[]) {
     if (settings) g_object_set(settings, "gtk-application-prefer-dark-theme", TRUE, NULL);
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_title(GTK_WINDOW(window), "ProxyBridge");
+    gtk_window_set_title(GTK_WINDOW(window), "JackBridge");
     gtk_window_set_default_size(GTK_WINDOW(window), 900, 600);
     g_signal_connect(window, "destroy", G_CALLBACK(on_window_destroy), NULL);
 
@@ -240,25 +240,25 @@ int main(int argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(vbox), status_bar, FALSE, FALSE, 0);
 
     // start
-    ProxyBridge_SetLogCallback(lib_log_callback);
-    ProxyBridge_SetConnectionCallback(lib_connection_callback);
-    ProxyBridge_SetTrafficLoggingEnabled(g_chk_logging);
-    ProxyBridge_SetDnsViaProxy(g_chk_dns);
+    JackBridge_SetLogCallback(lib_log_callback);
+    JackBridge_SetConnectionCallback(lib_connection_callback);
+    JackBridge_SetTrafficLoggingEnabled(g_chk_logging);
+    JackBridge_SetDnsViaProxy(g_chk_dns);
 
-    if (ProxyBridge_Start()) {
+    if (JackBridge_Start()) {
         // apply config
-        ProxyBridge_SetProxyConfig(g_proxy_type, g_proxy_ip, g_proxy_port, g_proxy_user, g_proxy_pass);
+        JackBridge_SetProxyConfig(g_proxy_type, g_proxy_ip, g_proxy_port, g_proxy_user, g_proxy_pass);
 
         // restore rules
         for (GList *l = g_rules_list; l != NULL; l = l->next) {
             RuleData *r = (RuleData *)l->data;
-            r->id = ProxyBridge_AddRule(r->process_name, r->target_hosts, r->target_ports, r->protocol, r->action);
-            if (!r->enabled) ProxyBridge_DisableRule(r->id);
+            r->id = JackBridge_AddRule(r->process_name, r->target_hosts, r->target_ports, r->protocol, r->action);
+            if (!r->enabled) JackBridge_DisableRule(r->id);
         }
 
-        gtk_statusbar_push(GTK_STATUSBAR(status_bar), status_context_id, "ProxyBridge Service Started.");
+        gtk_statusbar_push(GTK_STATUSBAR(status_bar), status_context_id, "JackBridge Service Started.");
     } else {
-        gtk_statusbar_push(GTK_STATUSBAR(status_bar), status_context_id, "Failed to start ProxyBridge engine.");
+        gtk_statusbar_push(GTK_STATUSBAR(status_bar), status_context_id, "Failed to start JackBridge engine.");
     }
 
     gtk_widget_show_all(window);

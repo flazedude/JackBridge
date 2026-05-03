@@ -75,7 +75,7 @@ jobs:
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: ProxyBridge-Build-${{ github.sha }}
+        name: JackBridge-Build-${{ github.sha }}
         path: Windows/output/
         retention-days: 30
 

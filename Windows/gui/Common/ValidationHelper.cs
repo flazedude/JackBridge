@@ -1,6 +1,6 @@
 using System;
 
-namespace ProxyBridge.GUI.Common;
+namespace JackBridge.GUI.Common;
 
 // handles common validation patterns
 public static class ValidationHelper

@@ -1,4 +1,4 @@
-name: Release ProxyBridge Windows
+name: Release JackBridge Windows
 
 on:
   release:
@@ -43,11 +43,11 @@ jobs:
     - name: Upload installer to release
       uses: softprops/action-gh-release@v1
       with:
-        files: Windows/output/ProxyBridge-Setup-*.exe
+        files: Windows/output/JackBridge-Setup-*.exe
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: ProxyBridge-Release-${{ github.event.release.tag_name }}
+        name: JackBridge-Release-${{ github.event.release.tag_name }}
         path: Windows/output/
         retention-days: 90

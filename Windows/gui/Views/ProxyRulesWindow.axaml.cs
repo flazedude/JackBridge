@@ -1,13 +1,14 @@
 using System;
 using System.ComponentModel;
 using System.Globalization;
+using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Data.Converters;
 using Avalonia.Interactivity;
 using Avalonia.Input;
-using ProxyBridge.GUI.ViewModels;
+using JackBridge.GUI.ViewModels;
 
-namespace ProxyBridge.GUI.Views;
+namespace JackBridge.GUI.Views;
 
 public class SelectAllTextConverter : IValueConverter
 {
@@ -35,9 +36,14 @@ public class SelectAllIconConverter : IValueConverter
     }
 }
 
-public partial class ProxyRulesWindow : Window
+public partial class ProxyRulesWindow : UserControl
 {
+    private static readonly DataFormat<string> DraggedRuleIdFormat =
+        DataFormat.CreateStringApplicationFormat("jackbridge.dragged-rule-id");
+
     private bool _isUpdatingFromViewModel = false;
+    private Border? _draggingRow;
+    private Border? _dropTargetRow;
 
     public ProxyRulesWindow()
     {
@@ -50,7 +56,13 @@ public partial class ProxyRulesWindow : Window
 
         this.DataContextChanged += ProxyRulesWindow_DataContextChanged;
 
-        if (this.FindControl<ItemsControl>("RulesItemsControl") is ItemsControl itemsControl)
+        RegisterRuleListDragHandlers("ActiveRulesItemsControl");
+        RegisterRuleListDragHandlers("StaticRulesItemsControl");
+    }
+
+    private void RegisterRuleListDragHandlers(string controlName)
+    {
+        if (this.FindControl<ItemsControl>(controlName) is ItemsControl itemsControl)
         {
             itemsControl.AddHandler(DragDrop.DropEvent, Rules_Drop);
             itemsControl.AddHandler(DragDrop.DragOverEvent, Rules_DragOver);
@@ -164,14 +176,18 @@ public partial class ProxyRulesWindow : Window
         if (sender is not Border border || border.DataContext is not ProxyRule rule)
             return;
 
-        var dragData = new DataObject();
-        dragData.Set("DraggedRule", rule);
+        SetDraggingRow(border);
 
-        var result = await DragDrop.DoDragDrop(e, dragData, DragDropEffects.Move);
+        var dragData = new DataTransfer();
+        dragData.Add(DataTransferItem.Create(
+            DraggedRuleIdFormat,
+            rule.RuleId.ToString(CultureInfo.InvariantCulture)));
+
+        var result = await DragDrop.DoDragDropAsync(e, dragData, DragDropEffects.Move);
+        ClearDragVisuals();
 
         if (result == DragDropEffects.Move && DataContext is ProxyRulesViewModel vm)
         {
-            // refsh indices after drag completes
             for (int i = 0; i < vm.ProxyRules.Count; i++)
             {
                 vm.ProxyRules[i].Index = i + 1;
@@ -182,6 +198,7 @@ public partial class ProxyRulesWindow : Window
     private void Rules_DragOver(object? sender, DragEventArgs e)
     {
         e.DragEffects = DragDropEffects.Move;
+        SetDropTargetRow(FindRuleRow(e.Source as Control));
     }
 
     private void Rules_Drop(object? sender, DragEventArgs e)
@@ -189,39 +206,89 @@ public partial class ProxyRulesWindow : Window
         if (DataContext is not ProxyRulesViewModel vm)
             return;
 
-        if (e.Data.Get("DraggedRule") is not ProxyRule draggedRule)
+        string? draggedRuleIdText = e.DataTransfer.TryGetValue(DraggedRuleIdFormat);
+        if (!uint.TryParse(draggedRuleIdText, NumberStyles.None, CultureInfo.InvariantCulture, out uint draggedRuleId))
             return;
+
+        var draggedRule = vm.ProxyRules.FirstOrDefault(rule => rule.RuleId == draggedRuleId);
+        if (draggedRule == null)
+            return;
+
+        ClearDropTargetRow();
 
         if (e.Source is Control control)
         {
-            var current = control;
-            while (current != null && current is not Border)
-            {
-                current = current.Parent as Control;
-            }
-
-            if (current is Border border && border.DataContext is ProxyRule targetRule)
+            if (FindRuleRow(control) is Border border && border.DataContext is ProxyRule targetRule)
             {
                 if (draggedRule.RuleId == targetRule.RuleId)
                     return;
 
-                int draggedIndex = vm.ProxyRules.IndexOf(draggedRule);
-                int targetIndex = vm.ProxyRules.IndexOf(targetRule);
+                if (draggedRule.IsStatic != targetRule.IsStatic)
+                    return;
+
+                var sectionRules = vm.ProxyRules
+                    .Where(rule => rule.IsStatic == draggedRule.IsStatic)
+                    .ToList();
+                int draggedIndex = sectionRules.IndexOf(draggedRule);
+                int targetIndex = sectionRules.IndexOf(targetRule);
 
                 if (draggedIndex == -1 || targetIndex == -1 || draggedIndex == targetIndex)
                     return;
 
-                uint newPosition = (uint)(targetIndex + 1);
-                if (vm.MoveRuleToPosition(draggedRule.RuleId, newPosition))
-                {
-                    vm.ProxyRules.Move(draggedIndex, targetIndex);
-
-                    for (int i = 0; i < vm.ProxyRules.Count; i++)
-                    {
-                        vm.ProxyRules[i].Index = i + 1;
-                    }
-                }
+                vm.MoveRuleToIndex(draggedRule, targetIndex);
             }
         }
+    }
+
+    private static Border? FindRuleRow(Control? control)
+    {
+        var current = control;
+        while (current != null)
+        {
+            if (current is Border border &&
+                border.Classes.Contains("ruleRow") &&
+                border.DataContext is ProxyRule)
+            {
+                return border;
+            }
+
+            current = current.Parent as Control;
+        }
+
+        return null;
+    }
+
+    private void SetDraggingRow(Border border)
+    {
+        _draggingRow?.Classes.Remove("dragging");
+        _draggingRow = border;
+        _draggingRow.Classes.Add("dragging");
+    }
+
+    private void SetDropTargetRow(Border? border)
+    {
+        if (_dropTargetRow == border)
+            return;
+
+        ClearDropTargetRow();
+
+        if (border == null || border == _draggingRow)
+            return;
+
+        _dropTargetRow = border;
+        _dropTargetRow.Classes.Add("dropTarget");
+    }
+
+    private void ClearDropTargetRow()
+    {
+        _dropTargetRow?.Classes.Remove("dropTarget");
+        _dropTargetRow = null;
+    }
+
+    private void ClearDragVisuals()
+    {
+        _draggingRow?.Classes.Remove("dragging");
+        _draggingRow = null;
+        ClearDropTargetRow();
     }
 }

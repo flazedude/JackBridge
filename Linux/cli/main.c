@@ -5,7 +5,7 @@
 #include <signal.h>
 #include <stdbool.h>
 #include <ctype.h>
-#include "../src/ProxyBridge.h"
+#include "../src/JackBridge.h"
 
 #define MAX_RULES 100
 #define MAX_RULE_STR 512
@@ -47,13 +47,13 @@ static void signal_handler(int sig)
                sig == SIGSEGV ? "SEGFAULT" :
                sig == SIGABRT ? "ABORT" : "BUS ERROR");
         printf("Calling emergency cleanup...\n");
-        ProxyBridge_Stop();
+        JackBridge_Stop();
         _exit(1);
     }
 
     if (keep_running)
     {
-        printf("\n\nStopping ProxyBridge...\n");
+        printf("\n\nStopping JackBridge...\n");
         keep_running = false;
     }
 }
@@ -71,7 +71,7 @@ static void show_banner(void)
     printf("  Universal proxy client for Linux applications\n");
     printf("\n");
     printf("\tAuthor: Sourav Kalal/InterceptSuite\n");
-    printf("\tGitHub: https://github.com/InterceptSuite/ProxyBridge\n");
+    printf("\tGitHub: https://github.com/InterceptSuite/JackBridge\n");
     printf("\n");
 }
 
@@ -112,7 +112,7 @@ static void show_help(const char* prog)
     printf("                           3 - Show both logs and connections\n\n");
 
     printf("  --cleanup              Cleanup resources (iptables, etc.) from crashed instance\n");
-    printf("                         Use if ProxyBridge crashed without proper cleanup\n\n");
+    printf("                         Use if JackBridge crashed without proper cleanup\n\n");
 
     printf("  --help, -h             Show this help message\n\n");
 
@@ -132,7 +132,7 @@ static void show_help(const char* prog)
     printf("       --dns-via-proxy true --verbose 3\n\n");
 
     printf("NOTE:\n");
-    printf("  ProxyBridge requires root privileges to use nfqueue.\n");
+    printf("  JackBridge requires root privileges to use nfqueue.\n");
     printf("  Run with 'sudo' or as root user.\n\n");
 }
 
@@ -304,7 +304,7 @@ int main(int argc, char *argv[])
         if (strcmp(argv[i], "--cleanup") == 0)
         {
             printf("Running cleanup...\n");
-            ProxyBridge_Stop();
+            JackBridge_Stop();
             printf("Cleanup complete.\n");
             return 0;
         }
@@ -374,7 +374,7 @@ int main(int argc, char *argv[])
     // need root
     if (!is_root())
     {
-        printf("\033[31m\nERROR: ProxyBridge requires root privileges!\033[0m\n");
+        printf("\033[31m\nERROR: JackBridge requires root privileges!\033[0m\n");
         printf("Please run this application with sudo or as root.\n\n");
         return 1;
     }
@@ -393,17 +393,17 @@ int main(int argc, char *argv[])
     // 0=nothing 1=logs 2=connections 3=both
 
     if (verbose_level == 1 || verbose_level == 3)
-        ProxyBridge_SetLogCallback(log_callback);
+        JackBridge_SetLogCallback(log_callback);
     else
-        ProxyBridge_SetLogCallback(NULL);  // Explicitly disable
+        JackBridge_SetLogCallback(NULL);  // Explicitly disable
 
     if (verbose_level == 2 || verbose_level == 3)
-        ProxyBridge_SetConnectionCallback(connection_callback);
+        JackBridge_SetConnectionCallback(connection_callback);
     else
-        ProxyBridge_SetConnectionCallback(NULL);  // Explicitly disable
+        JackBridge_SetConnectionCallback(NULL);  // Explicitly disable
 
     // turn on traffic logging when needed
-    ProxyBridge_SetTrafficLoggingEnabled(verbose_level > 0);
+    JackBridge_SetTrafficLoggingEnabled(verbose_level > 0);
 
     // show config
     printf("Proxy: %s://%s:%u\n",
@@ -416,7 +416,7 @@ int main(int argc, char *argv[])
     printf("DNS via Proxy: %s\n", dns_via_proxy ? "Enabled" : "Disabled");
 
     // setup proxy
-    if (!ProxyBridge_SetProxyConfig(proxy_type, proxy_host, proxy_port,
+    if (!JackBridge_SetProxyConfig(proxy_type, proxy_host, proxy_port,
                                     proxy_username[0] ? proxy_username : "",
                                     proxy_password[0] ? proxy_password : ""))
     {
@@ -424,7 +424,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    ProxyBridge_SetDnsViaProxy(dns_via_proxy);
+    JackBridge_SetDnsViaProxy(dns_via_proxy);
 
     // add rules
     if (num_rules > 0)
@@ -437,7 +437,7 @@ int main(int argc, char *argv[])
             const char* action_str = rules[i].action == RULE_ACTION_PROXY ? "PROXY" :
                                     rules[i].action == RULE_ACTION_DIRECT ? "DIRECT" : "BLOCK";
 
-            uint32_t rule_id = ProxyBridge_AddRule(
+            uint32_t rule_id = JackBridge_AddRule(
                 rules[i].process_name,
                 rules[i].target_hosts,
                 rules[i].target_ports,
@@ -466,15 +466,15 @@ int main(int argc, char *argv[])
         printf("Use --rule to add proxy rules. See --help for examples.\n");
     }
 
-    // start proxybridge
-    if (!ProxyBridge_Start())
+    // start jackbridge
+    if (!JackBridge_Start())
     {
-        fprintf(stderr, "ERROR: Failed to start ProxyBridge\n");
+        fprintf(stderr, "ERROR: Failed to start JackBridge\n");
         return 1;
     }
 
     keep_running = true;
-    printf("\nProxyBridge started. Press Ctrl+C to stop...\n\n");
+    printf("\nJackBridge started. Press Ctrl+C to stop...\n\n");
 
     signal(SIGINT, signal_handler);
     signal(SIGTERM, signal_handler);
@@ -489,8 +489,8 @@ int main(int argc, char *argv[])
     }
 
     // cleanup
-    ProxyBridge_Stop();
-    printf("ProxyBridge stopped.\n");
+    JackBridge_Stop();
+    printf("JackBridge stopped.\n");
 
     return 0;
 }

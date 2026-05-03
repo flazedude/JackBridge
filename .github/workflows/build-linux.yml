@@ -58,25 +58,25 @@ jobs:
         echo "=== Build Output ==="
         ls -lh Linux/output/
         echo ""
-        if [ -f "Linux/output/libproxybridge.so" ]; then
+        if [ -f "Linux/output/libjackbridge.so" ]; then
           echo "✓ Library built successfully"
-          file Linux/output/libproxybridge.so
+          file Linux/output/libjackbridge.so
         else
           echo "✗ Library build failed"
           exit 1
         fi
         echo ""
-        if [ -f "Linux/output/ProxyBridge" ]; then
+        if [ -f "Linux/output/JackBridge" ]; then
           echo "✓ CLI built successfully"
-          file Linux/output/ProxyBridge
+          file Linux/output/JackBridge
         else
           echo "✗ CLI build failed"
           exit 1
         fi
         echo ""
-        if [ -f "Linux/output/ProxyBridgeGUI" ]; then
+        if [ -f "Linux/output/JackBridgeGUI" ]; then
           echo "✓ GUI built successfully"
-          file Linux/output/ProxyBridgeGUI
+          file Linux/output/JackBridgeGUI
         else
           echo "⚠ GUI build skipped (GTK3 not available or build failed)"
         fi
@@ -85,7 +85,7 @@ jobs:
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: ProxyBridge-Linux-Build-${{ github.sha }}
+        name: JackBridge-Linux-Build-${{ github.sha }}
         path: Linux/output/
         retention-days: 30
 

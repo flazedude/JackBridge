@@ -10,9 +10,9 @@ CFLAGS = -Wall -Wextra -O3 -I../src \
 	-fwrapv
 LDFLAGS = -L../src -pie -Wl,-z,relro,-z,now -Wl,-z,noexecstack -s \
 	-Wl,-rpath,/usr/local/lib
-LIBS = -lproxybridge -lpthread
+LIBS = -ljackbridge -lpthread
 
-TARGET = ProxyBridge
+TARGET = JackBridge
 SOURCES = main.c
 OBJECTS = $(SOURCES:.c=.o)
 

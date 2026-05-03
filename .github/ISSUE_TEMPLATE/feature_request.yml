@@ -1,5 +1,5 @@
 name: Feature Request
-description: Suggest a new feature for ProxyBridge
+description: Suggest a new feature for JackBridge
 title: "[Feature]: "
 labels: ["enhancement"]
 body:
@@ -24,8 +24,8 @@ body:
   - type: input
     id: version
     attributes:
-      label: ProxyBridge Version
-      description: What version of ProxyBridge are you currently using?
+      label: JackBridge Version
+      description: What version of JackBridge are you currently using?
       placeholder: e.g., 1.0.0
     validations:
       required: true
@@ -45,11 +45,11 @@ body:
       label: Documentation
       description: Have you read the documentation for your platform?
       options:
-        - label: I have read the [Windows documentation](https://github.com/InterceptSuite/ProxyBridge/blob/master/Windows/README.md)
+        - label: I have read the [Windows documentation](https://github.com/InterceptSuite/JackBridge/blob/master/Windows/README.md)
           required: false
-        - label: I have read the [macOS documentation](https://github.com/InterceptSuite/ProxyBridge/blob/master/MacOS/README.md)
+        - label: I have read the [macOS documentation](https://github.com/InterceptSuite/JackBridge/blob/master/MacOS/README.md)
           required: false
-        - label: I have read the [Linux documentation](https://github.com/InterceptSuite/ProxyBridge/blob/master/Linux/README.md)
+        - label: I have read the [Linux documentation](https://github.com/InterceptSuite/JackBridge/blob/master/Linux/README.md)
           required: false
 
   - type: checkboxes

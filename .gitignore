@@ -12,20 +12,20 @@ Windows/gui/obj/**
 Windows/cli/bin/**
 Windows/cli/obj/**
 .vscode/**
-Windows/output/ProxyBridge_CLI.pdb
+Windows/output/JackBridge_CLI.pdb
 
 ## macOS / Xcode / Swift
 
 # Build environment
-MacOS/ProxyBridge/.env
-MacOS/ProxyBridge/output/
-MacOS/ProxyBridge/build/
-MacOS/ProxyBridge/provision/**
+MacOS/JackBridge/.env
+MacOS/JackBridge/output/
+MacOS/JackBridge/build/
+MacOS/JackBridge/provision/**
 
 # Signing configuration files (sensitive)
-MacOS/ProxyBridge/Signing-App.xcconfig
-MacOS/ProxyBridge/Signing-Extension.xcconfig
-MacOS/ProxyBridge/Signing-Config.xcconfig
+MacOS/JackBridge/Signing-App.xcconfig
+MacOS/JackBridge/Signing-Extension.xcconfig
+MacOS/JackBridge/Signing-Config.xcconfig
 
 # Xcode
 xcuserdata/
@@ -84,18 +84,18 @@ playground.xcworkspace
 Network Trash Folder
 Temporary Items
 .apdisk
-MacOS/ProxyBridge/build/
-MacOS/ProxyBridge/output/
+MacOS/JackBridge/build/
+MacOS/JackBridge/output/
 
 # Linux/**
-MacOS/ProxyBridge/Signing-Config.xcconfig
-MacOS/ProxyBridge/Signing-Config-app.xcconfig
-MacOS/ProxyBridge/Signing-Config-ext.xcconfig
+MacOS/JackBridge/Signing-Config.xcconfig
+MacOS/JackBridge/Signing-Config-app.xcconfig
+MacOS/JackBridge/Signing-Config-ext.xcconfig
 Linux/output/**
 Linux/build/**
-MacOS/ProxyBridge/config/Signing-Config-ext.xcconfig
-MacOS/ProxyBridge/config/Signing-Config-app.xcconfig
+MacOS/JackBridge/config/Signing-Config-ext.xcconfig
+MacOS/JackBridge/config/Signing-Config-app.xcconfig
 Linux/cli/main.o
-Linux/cli/proxybridge-cli
-Linux/src/libproxybridge.so
-Linux/src/ProxyBridge.o
+Linux/cli/jackbridge-cli
+Linux/src/libjackbridge.so
+Linux/src/JackBridge.o

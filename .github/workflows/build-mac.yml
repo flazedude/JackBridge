@@ -24,8 +24,8 @@ jobs:
     
     - name: Create xcconfig files
       run: |
-        echo "${{ secrets.MACOS_APP_XCCONFIG }}" > MacOS/ProxyBridge/Signing-Config-app.xcconfig
-        echo "${{ secrets.MACOS_EXT_XCCONFIG }}" > MacOS/ProxyBridge/Signing-Config-ext.xcconfig
+        echo "${{ secrets.MACOS_APP_XCCONFIG }}" > MacOS/JackBridge/Signing-Config-app.xcconfig
+        echo "${{ secrets.MACOS_EXT_XCCONFIG }}" > MacOS/JackBridge/Signing-Config-ext.xcconfig
 
     - name: Install Provisioning Profiles
       run: |
@@ -81,10 +81,10 @@ jobs:
 
     - name: Build Universal Binary
       run: |
-        cd MacOS/ProxyBridge
+        cd MacOS/JackBridge
         xcodebuild \
-          -project ProxyBridge.xcodeproj \
-          -scheme ProxyBridge \
+          -project JackBridge.xcodeproj \
+          -scheme JackBridge \
           -configuration Release \
           -derivedDataPath build/DerivedData \
           ARCHS="arm64 x86_64" \
@@ -94,22 +94,22 @@ jobs:
 
     - name: Verify Build
       run: |
-        cd MacOS/ProxyBridge
+        cd MacOS/JackBridge
         ls -la build/DerivedData/Build/Products/Release/
-        file build/DerivedData/Build/Products/Release/ProxyBridge.app/Contents/MacOS/ProxyBridge
-        lipo -archs build/DerivedData/Build/Products/Release/ProxyBridge.app/Contents/MacOS/ProxyBridge
+        file build/DerivedData/Build/Products/Release/JackBridge.app/Contents/MacOS/JackBridge
+        lipo -archs build/DerivedData/Build/Products/Release/JackBridge.app/Contents/MacOS/JackBridge
         # Verify code signature
-        codesign -dv --verbose=4 build/DerivedData/Build/Products/Release/ProxyBridge.app
+        codesign -dv --verbose=4 build/DerivedData/Build/Products/Release/JackBridge.app
 
     - name: Notarize App
       run: |
-        APP_PATH="MacOS/ProxyBridge/build/DerivedData/Build/Products/Release/ProxyBridge.app"
+        APP_PATH="MacOS/JackBridge/build/DerivedData/Build/Products/Release/JackBridge.app"
 
         # Zip the app for submission
-        ditto -c -k --keepParent "$APP_PATH" /tmp/ProxyBridge.zip
+        ditto -c -k --keepParent "$APP_PATH" /tmp/JackBridge.zip
 
         # Submit for notarization and wait for result, capture submission ID
-        SUBMIT_OUTPUT=$(xcrun notarytool submit /tmp/ProxyBridge.zip \
+        SUBMIT_OUTPUT=$(xcrun notarytool submit /tmp/JackBridge.zip \
           --apple-id "${{ secrets.APPLE_ID }}" \
           --password "${{ secrets.APPLE_APP_PASSWORD }}" \
           --team-id "${{ secrets.APPLE_TEAM_ID }}" \
@@ -148,21 +148,21 @@ jobs:
       run: |
         # Write PKG_ENV to .env but strip SIGNING_IDENTITY so build.sh skips signing
         # (productsign inside build.sh cannot access build.keychain — we do it below)
-        printf '%s' "$PKG_ENV_CONTENT" | grep -v "^SIGNING_IDENTITY" > MacOS/ProxyBridge/.env
+        printf '%s' "$PKG_ENV_CONTENT" | grep -v "^SIGNING_IDENTITY" > MacOS/JackBridge/.env
 
         # Copy notarized .app into output/ where build.sh expects it
-        mkdir -p MacOS/ProxyBridge/output
-        cp -R MacOS/ProxyBridge/build/DerivedData/Build/Products/Release/ProxyBridge.app \
-          MacOS/ProxyBridge/output/ProxyBridge.app
+        mkdir -p MacOS/JackBridge/output
+        cp -R MacOS/JackBridge/build/DerivedData/Build/Products/Release/JackBridge.app \
+          MacOS/JackBridge/output/JackBridge.app
 
         # Run build script — creates the unsigned .pkg only
-        cd MacOS/ProxyBridge
+        cd MacOS/JackBridge
         chmod +x build.sh
         bash build.sh
 
         PKG_VERSION="3.2.0"
-        PKG_UNSIGNED="output/ProxyBridge-v${PKG_VERSION}-Universal-Installer.pkg"
-        PKG_SIGNED="output/ProxyBridge-v${PKG_VERSION}-Universal-Installer-signed.pkg"
+        PKG_UNSIGNED="output/JackBridge-v${PKG_VERSION}-Universal-Installer.pkg"
+        PKG_SIGNED="output/JackBridge-v${PKG_VERSION}-Universal-Installer-signed.pkg"
 
         # Sign pkg with explicit keychain — no prompting
         echo "Signing installer..."
@@ -205,8 +205,8 @@ jobs:
     - name: Upload PKG Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ProxyBridge-macOS-Installer
-        path: MacOS/ProxyBridge/output/ProxyBridge-*.pkg
+        name: JackBridge-macOS-Installer
+        path: MacOS/JackBridge/output/JackBridge-*.pkg
         retention-days: 30
 
     - name: Cleanup
@@ -219,11 +219,11 @@ jobs:
         rm -f ~/Library/MobileDevice/Provisioning\ Profiles/*.provisionprofile || true
 
         # Remove temp cert and profile files
-        rm -f /tmp/certificate.p12 /tmp/installer.p12 /tmp/app.provisionprofile /tmp/ext.provisionprofile /tmp/ProxyBridge.zip || true
+        rm -f /tmp/certificate.p12 /tmp/installer.p12 /tmp/app.provisionprofile /tmp/ext.provisionprofile /tmp/JackBridge.zip || true
 
         # Remove .env with sensitive data
-        rm -f MacOS/ProxyBridge/.env || true
+        rm -f MacOS/JackBridge/.env || true
 
         # Remove xcconfig files with sensitive data
-        rm -f MacOS/ProxyBridge/Signing-Config-app.xcconfig || true
-        rm -f MacOS/ProxyBridge/Signing-Config-ext.xcconfig || true
+        rm -f MacOS/JackBridge/Signing-Config-app.xcconfig || true
+        rm -f MacOS/JackBridge/Signing-Config-ext.xcconfig || true

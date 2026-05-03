@@ -1,13 +1,15 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.Diagnostics;
 using System.Linq;
 using System.Text.Json.Serialization;
 using System.Windows.Input;
 using Avalonia.Controls;
-using ProxyBridge.GUI.Services;
-using ProxyBridge.GUI.Common;
+using JackBridge.GUI.Services;
+using JackBridge.GUI.Common;
 
-namespace ProxyBridge.GUI.ViewModels;
+namespace JackBridge.GUI.ViewModels;
 
 public class ProxyRulesViewModel : ViewModelBase
 {
@@ -22,14 +24,21 @@ public class ProxyRulesViewModel : ViewModelBase
     private string _newTargetPorts = "*";
     private string _newProtocol = "TCP"; // TCP, UDP, or BOTH
     private string _newProxyAction = "PROXY";
+    private string _newRuleSection = "Active";
     private string _processNameError = "";
+    private ProcessChoice? _selectedProcessChoice;
     private Action<ProxyRule>? _onAddRule;
     private Action? _onClose;
     private Action? _onConfigChanged;
-    private ProxyBridgeService? _proxyService;
+    private JackBridgeService? _proxyService;
     private Window? _window;
 
     public ObservableCollection<ProxyRule> ProxyRules { get; }
+    public ObservableCollection<ProcessChoice> RunningProcesses { get; } = new();
+    public System.Collections.Generic.IEnumerable<ProxyRule> ActiveRules => ProxyRules.Where(rule => !rule.IsStatic);
+    public System.Collections.Generic.IEnumerable<ProxyRule> StaticRules => ProxyRules.Where(rule => rule.IsStatic);
+    public bool HasActiveRules => ActiveRules.Any();
+    public bool HasStaticRules => StaticRules.Any();
 
     public bool IsAddRuleViewOpen
     {
@@ -71,10 +80,38 @@ public class ProxyRulesViewModel : ViewModelBase
         set => SetProperty(ref _newProxyAction, value);
     }
 
+    public string NewRuleSection
+    {
+        get => _newRuleSection;
+        set => SetProperty(ref _newRuleSection, value);
+    }
+
+    public int NewRuleSectionIndex
+    {
+        get => NewRuleSection.Equals("Static", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
+        set
+        {
+            NewRuleSection = value == 1 ? "Static" : "Active";
+            OnPropertyChanged();
+        }
+    }
+
     public string ProcessNameError
     {
         get => _processNameError;
         set => SetProperty(ref _processNameError, value);
+    }
+
+    public ProcessChoice? SelectedProcessChoice
+    {
+        get => _selectedProcessChoice;
+        set
+        {
+            if (SetProperty(ref _selectedProcessChoice, value) && value != null)
+            {
+                AppendProcessName(value.ExecutableName);
+            }
+        }
     }
 
     public ICommand AddRuleCommand { get; }
@@ -88,6 +125,8 @@ public class ProxyRulesViewModel : ViewModelBase
     public ICommand ExportRulesCommand { get; }
     public ICommand ImportRulesCommand { get; }
     public ICommand DeleteSelectedRulesCommand { get; }
+    public ICommand MoveRuleUpCommand { get; }
+    public ICommand MoveRuleDownCommand { get; }
 
     public bool HasSelectedRules => ProxyRules.Any(r => r.IsSelected);
     public bool AllRulesSelected => ProxyRules.Any() && ProxyRules.All(r => r.IsSelected);
@@ -99,10 +138,80 @@ public class ProxyRulesViewModel : ViewModelBase
 
     public bool MoveRuleToPosition(uint ruleId, uint newPosition)
     {
-        if (_proxyService == null)
+        var rule = ProxyRules.FirstOrDefault(r => r.RuleId == ruleId);
+        if (rule == null || newPosition == 0)
             return false;
 
-        return _proxyService.MoveRuleToPosition(ruleId, newPosition);
+        return MoveRuleToIndex(rule, (int)newPosition - 1);
+    }
+
+    public bool MoveRuleToIndex(ProxyRule rule, int targetIndex)
+    {
+        if (_proxyService == null || rule == null)
+            return false;
+
+        int currentIndex = ProxyRules.IndexOf(rule);
+        if (currentIndex < 0 || ProxyRules.Count == 0)
+            return false;
+
+        var sectionRules = ProxyRules
+            .Where(existingRule => existingRule.IsStatic == rule.IsStatic)
+            .ToList();
+        int sectionIndex = sectionRules.IndexOf(rule);
+        if (sectionIndex < 0)
+            return false;
+
+        int sectionTargetIndex = Math.Clamp(targetIndex, 0, sectionRules.Count - 1);
+        if (sectionIndex == sectionTargetIndex)
+            return false;
+
+        var reorderedSection = sectionRules.ToList();
+        reorderedSection.RemoveAt(sectionIndex);
+        reorderedSection.Insert(sectionTargetIndex, rule);
+
+        var reorderedRules = ProxyRules
+            .Where(existingRule => existingRule.IsStatic != rule.IsStatic)
+            .ToList();
+
+        if (rule.IsStatic)
+        {
+            reorderedRules.AddRange(reorderedSection);
+        }
+        else
+        {
+            reorderedRules.InsertRange(0, reorderedSection);
+        }
+
+        targetIndex = reorderedRules.IndexOf(rule);
+        if (currentIndex == targetIndex)
+            return false;
+
+        uint newPosition = (uint)(targetIndex + 1);
+        if (!_proxyService.MoveRuleToPosition(rule.RuleId, newPosition))
+            return false;
+
+        ProxyRules.Clear();
+        foreach (var reorderedRule in reorderedRules)
+        {
+            ProxyRules.Add(reorderedRule);
+        }
+
+        RefreshRulePriorities();
+        NotifyRuleSectionsChanged();
+        _onConfigChanged?.Invoke();
+        return true;
+    }
+
+    private void RefreshRulePriorities()
+    {
+        int activeIndex = 1;
+        int staticIndex = 1;
+
+        for (int i = 0; i < ProxyRules.Count; i++)
+        {
+            ProxyRules[i].Index = i + 1;
+            ProxyRules[i].SectionIndex = ProxyRules[i].IsStatic ? staticIndex++ : activeIndex++;
+        }
     }
 
     private void ResetRuleForm()
@@ -112,16 +221,28 @@ public class ProxyRulesViewModel : ViewModelBase
         NewTargetPorts = "*";
         NewProtocol = "TCP";
         NewProxyAction = "PROXY";
+        NewRuleSection = "Active";
         ProcessNameError = "";
     }
 
-    public ProxyRulesViewModel(ObservableCollection<ProxyRule> proxyRules, Action<ProxyRule> onAddRule, Action onClose, ProxyBridgeService? proxyService = null, Action? onConfigChanged = null)
+    private void NotifyRuleSectionsChanged()
+    {
+        OnPropertyChanged(nameof(ActiveRules));
+        OnPropertyChanged(nameof(StaticRules));
+        OnPropertyChanged(nameof(HasActiveRules));
+        OnPropertyChanged(nameof(HasStaticRules));
+        OnPropertyChanged(nameof(HasSelectedRules));
+        OnPropertyChanged(nameof(AllRulesSelected));
+    }
+
+    public ProxyRulesViewModel(ObservableCollection<ProxyRule> proxyRules, Action<ProxyRule> onAddRule, Action onClose, JackBridgeService? proxyService = null, Action? onConfigChanged = null)
     {
         ProxyRules = proxyRules;
         _onAddRule = onAddRule;
         _onClose = onClose;
         _proxyService = proxyService;
         _onConfigChanged = onConfigChanged;
+        ProxyRules.CollectionChanged += ProxyRules_CollectionChanged;
 
         foreach (var rule in ProxyRules)
         {
@@ -131,6 +252,7 @@ public class ProxyRulesViewModel : ViewModelBase
         AddRuleCommand = new RelayCommand(() =>
         {
             ResetRuleForm();
+            RefreshRunningProcesses();
             IsAddRuleViewOpen = true;
         });
 
@@ -168,6 +290,8 @@ public class ProxyRulesViewModel : ViewModelBase
                         existingRule.TargetPorts = NewTargetPorts;
                         existingRule.Protocol = NewProtocol;
                         existingRule.Action = NewProxyAction;
+                        existingRule.IsStatic = NewRuleSection.Equals("Static", StringComparison.OrdinalIgnoreCase);
+                        NormalizeRuleOrder();
                     }
                     _onConfigChanged?.Invoke();
                 }
@@ -184,7 +308,8 @@ public class ProxyRulesViewModel : ViewModelBase
                     TargetPorts = NewTargetPorts,
                     Protocol = NewProtocol,
                     Action = NewProxyAction,
-                    IsEnabled = true
+                    IsEnabled = true,
+                    IsStatic = NewRuleSection.Equals("Static", StringComparison.OrdinalIgnoreCase)
                 };
 
                 newRule.PropertyChanged += Rule_PropertyChanged;
@@ -204,47 +329,9 @@ public class ProxyRulesViewModel : ViewModelBase
             _onClose?.Invoke();
         });
 
-        BrowseProcessCommand = new RelayCommand(async () =>
+        BrowseProcessCommand = new RelayCommand(() =>
         {
-            if (_window == null)
-                return;
-
-            var dialog = new Avalonia.Platform.Storage.FilePickerOpenOptions
-            {
-                Title = "Select Process Executable",
-                AllowMultiple = false,
-                FileTypeFilter = new[]
-                {
-                    new Avalonia.Platform.Storage.FilePickerFileType("Executable Files")
-                    {
-                        Patterns = new[] { "*.exe" }
-                    },
-                    new Avalonia.Platform.Storage.FilePickerFileType("All Files")
-                    {
-                        Patterns = new[] { "*.*" }
-                    }
-                }
-            };
-
-            var result = await _window.StorageProvider.OpenFilePickerAsync(dialog);
-
-            if (result != null && result.Count > 0)
-            {
-                string filename = System.IO.Path.GetFileName(result[0].Path.LocalPath);
-                if (string.IsNullOrWhiteSpace(NewProcessName) || NewProcessName == "*")
-                {
-                    NewProcessName = filename;
-                }
-                else
-                {
-                    if (!NewProcessName.EndsWith(";"))
-                        NewProcessName += "; ";
-                    else
-                        NewProcessName += " ";
-
-                    NewProcessName += filename;
-                }
-            }
+            RefreshRunningProcesses();
         });
 
         DeleteRuleCommand = new RelayCommandWithParameter<ProxyRule>(async (rule) =>
@@ -260,6 +347,8 @@ public class ProxyRulesViewModel : ViewModelBase
                 if (_proxyService.DeleteRule(rule.RuleId))
                 {
                     ProxyRules.Remove(rule);
+                    RefreshRulePriorities();
+                    NotifyRuleSectionsChanged();
                     _onConfigChanged?.Invoke();
                 }
             }
@@ -277,7 +366,9 @@ public class ProxyRulesViewModel : ViewModelBase
             NewTargetPorts = rule.TargetPorts;
             NewProtocol = rule.Protocol;
             NewProxyAction = rule.Action;
+            NewRuleSection = rule.IsStatic ? "Static" : "Active";
             ProcessNameError = "";
+            RefreshRunningProcesses();
             IsAddRuleViewOpen = true;
         });
 
@@ -338,10 +429,35 @@ public class ProxyRulesViewModel : ViewModelBase
                 }
             }
 
+            RefreshRulePriorities();
+            NotifyRuleSectionsChanged();
             _onConfigChanged?.Invoke();
             OnPropertyChanged(nameof(HasSelectedRules));
             OnPropertyChanged(nameof(AllRulesSelected));
         });
+
+        MoveRuleUpCommand = new RelayCommandWithParameter<ProxyRule>((rule) =>
+        {
+            MoveRuleToIndex(rule, GetSectionIndex(rule) - 1);
+        });
+
+        MoveRuleDownCommand = new RelayCommandWithParameter<ProxyRule>((rule) =>
+        {
+            MoveRuleToIndex(rule, GetSectionIndex(rule) + 1);
+        });
+    }
+
+    private void ProxyRules_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        NotifyRuleSectionsChanged();
+    }
+
+    private int GetSectionIndex(ProxyRule rule)
+    {
+        return ProxyRules
+            .Where(existingRule => existingRule.IsStatic == rule.IsStatic)
+            .ToList()
+            .IndexOf(rule);
     }
 
     private async System.Threading.Tasks.Task<bool> ShowConfirmDialogAsync(string title, string message)
@@ -448,7 +564,7 @@ public class ProxyRulesViewModel : ViewModelBase
         var saveDialog = new Avalonia.Platform.Storage.FilePickerSaveOptions
         {
             Title = "Export Proxy Rules",
-            SuggestedFileName = "ProxyBridge-Rules.json",
+            SuggestedFileName = "JackBridge-Rules.json",
             FileTypeChoices = new[]
             {
                 new Avalonia.Platform.Storage.FilePickerFileType("JSON Files")
@@ -469,7 +585,8 @@ public class ProxyRulesViewModel : ViewModelBase
                 TargetPorts = r.TargetPorts,
                 Protocol = r.Protocol,
                 Action = r.Action,
-                Enabled = r.IsEnabled
+                Enabled = r.IsEnabled,
+                Static = r.IsStatic
             }).ToList();
 
             var json = System.Text.Json.JsonSerializer.Serialize(exportData, ProxyRuleJsonContext.Default.ListProxyRuleExport);
@@ -538,11 +655,14 @@ public class ProxyRulesViewModel : ViewModelBase
                             Protocol = ruleData.Protocol,
                             Action = ruleData.Action,
                             IsEnabled = ruleData.Enabled,
+                            IsStatic = ruleData.Static || ruleData.ProcessNames.Trim() == "*",
                             Index = ProxyRules.Count + 1
                         };
 
                         newRule.PropertyChanged += Rule_PropertyChanged;
-                        ProxyRules.Add(newRule);
+                        InsertRuleInPriorityOrder(newRule);
+                        RefreshRulePriorities();
+                        _proxyService.MoveRuleToPosition(newRule.RuleId, (uint)newRule.Index);
 
                         if (!ruleData.Enabled)
                         {
@@ -554,6 +674,7 @@ public class ProxyRulesViewModel : ViewModelBase
                 }
 
                 await ShowMessageAsync("Import Successful", $"Imported {successCount} rule(s) from:\n{filePath}");
+                _onConfigChanged?.Invoke();
             }
             else
             {
@@ -614,6 +735,116 @@ public class ProxyRulesViewModel : ViewModelBase
 
         await messageBox.ShowDialog(_window);
     }
+
+    private void RefreshRunningProcesses()
+    {
+        var selectedName = SelectedProcessChoice?.ExecutableName;
+        RunningProcesses.Clear();
+
+        var processes = Process.GetProcesses()
+            .Select(process =>
+            {
+                try
+                {
+                    if (string.IsNullOrWhiteSpace(process.ProcessName))
+                        return null;
+
+                    var executableName = process.ProcessName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)
+                        ? process.ProcessName
+                        : $"{process.ProcessName}.exe";
+
+                    return new ProcessChoice(executableName, process.Id);
+                }
+                catch
+                {
+                    return null;
+                }
+            })
+            .Where(process => process != null)
+            .Cast<ProcessChoice>()
+            .GroupBy(process => process.ExecutableName, StringComparer.OrdinalIgnoreCase)
+            .Select(group => group.OrderBy(process => process.ProcessId).First())
+            .OrderBy(process => process.ExecutableName, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        foreach (var process in processes)
+        {
+            RunningProcesses.Add(process);
+        }
+
+        SelectedProcessChoice = RunningProcesses.FirstOrDefault(process =>
+            process.ExecutableName.Equals(selectedName ?? "", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private void AppendProcessName(string executableName)
+    {
+        if (string.IsNullOrWhiteSpace(executableName))
+            return;
+
+        if (string.IsNullOrWhiteSpace(NewProcessName) || NewProcessName == "*")
+        {
+            NewProcessName = executableName;
+            return;
+        }
+
+        var existingNames = NewProcessName
+            .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        if (existingNames.Any(name => name.Equals(executableName, StringComparison.OrdinalIgnoreCase)))
+            return;
+
+        NewProcessName = $"{NewProcessName.TrimEnd(';', ' ')}; {executableName}";
+    }
+
+    private void InsertRuleInPriorityOrder(ProxyRule rule)
+    {
+        int insertIndex = rule.IsStatic
+            ? ProxyRules.Count
+            : ProxyRules.TakeWhile(existingRule => !existingRule.IsStatic).Count();
+
+        ProxyRules.Insert(insertIndex, rule);
+        RefreshRulePriorities();
+        NotifyRuleSectionsChanged();
+    }
+
+    private void NormalizeRuleOrder()
+    {
+        var orderedRules = ProxyRules
+            .Where(rule => !rule.IsStatic)
+            .Concat(ProxyRules.Where(rule => rule.IsStatic))
+            .ToList();
+
+        ProxyRules.Clear();
+        foreach (var rule in orderedRules)
+        {
+            ProxyRules.Add(rule);
+        }
+
+        RefreshRulePriorities();
+
+        if (_proxyService != null)
+        {
+            foreach (var rule in ProxyRules.Where(rule => rule.RuleId > 0))
+            {
+                _proxyService.MoveRuleToPosition(rule.RuleId, (uint)rule.Index);
+            }
+        }
+
+        NotifyRuleSectionsChanged();
+    }
+}
+
+public class ProcessChoice
+{
+    public ProcessChoice(string executableName, int processId)
+    {
+        ExecutableName = executableName;
+        ProcessId = processId;
+    }
+
+    public string ExecutableName { get; }
+    public int ProcessId { get; }
+    public string DisplayName => $"{ExecutableName} (PID {ProcessId})";
 }
 
 // JSON export/import model matching macOS format
@@ -625,6 +856,7 @@ public class ProxyRuleExport
     public string Protocol { get; set; } = "BOTH";
     public string Action { get; set; } = "DIRECT";
     public bool Enabled { get; set; } = true;
+    public bool Static { get; set; } = false;
 }
 
 // JSON serialization context for NativeAOT compatibility

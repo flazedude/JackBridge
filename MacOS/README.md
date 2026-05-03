@@ -1,6 +1,6 @@
-# ProxyBridge for macOS
+# JackBridge for macOS
 
-ProxyBridge is a transparent proxy application for macOS that allows you to route network traffic through HTTP or SOCKS5 proxies with granular control using rules based on application, destination, and protocol.
+JackBridge is a transparent proxy application for macOS that allows you to route network traffic through HTTP or SOCKS5 proxies with granular control using rules based on application, destination, and protocol.
 
 ## Table of Contents
 
@@ -18,12 +18,12 @@ ProxyBridge is a transparent proxy application for macOS that allows you to rout
 
 ## Overview
 
-ProxyBridge leverages macOS Network Extension framework to intercept and route network traffic. It provides a GUI application for configuration and uses a system extension to handle traffic routing based on user-defined rules.
+JackBridge leverages macOS Network Extension framework to intercept and route network traffic. It provides a GUI application for configuration and uses a system extension to handle traffic routing based on user-defined rules.
 
 <p align="center">
-  <img src="../img/ProxyBridge-mac.png" alt="ProxyBridge macOS Main Interface" width="800"/>
+  <img src="../img/JackBridge-mac.png" alt="JackBridge macOS Main Interface" width="800"/>
   <br/>
-  <em>ProxyBridge Main Window</em>
+  <em>JackBridge Main Window</em>
 </p>
 
 ## Architecture
@@ -43,7 +43,7 @@ ProxyBridge leverages macOS Network Extension framework to intercept and route n
        ↓
 ┌──────────────────────┐
 │                      │
-│   ProxyBridge        │
+│   JackBridge        │
 │   Extension          │
 │   (System Extension) │
 │                      │
@@ -72,7 +72,7 @@ ProxyBridge leverages macOS Network Extension framework to intercept and route n
                                            │   │         │   │
                                            ↓   ↓         ↓   ↓
                                        ┌────────────────────────────┐
-                                       │  ProxyBridge Network       │
+                                       │  JackBridge Network       │
                                        │  Manager                   │
                                        │  (4e) Store original       │
                                        │       dest IP/port         │
@@ -145,7 +145,7 @@ ProxyBridge leverages macOS Network Extension framework to intercept and route n
 ### Traffic Flow Details
 
 1. **Application initiates connection** - Any application on the system makes a network request
-2. **Network Extension intercepts** - ProxyBridge extension receives the connection request via NETransparentProxyProvider
+2. **Network Extension intercepts** - JackBridge extension receives the connection request via NETransparentProxyProvider
 3. **Rule evaluation** - Extension checks configured rules against:
    - Application bundle identifier (package name)
    - Destination IP/hostname (TCP only)
@@ -165,13 +165,13 @@ ProxyBridge leverages macOS Network Extension framework to intercept and route n
 
 ## Installation
 
-1. Download the latest release from the [releases page](https://github.com/InterceptSuite/ProxyBridge/releases)
+1. Download the latest release from the [releases page](https://github.com/InterceptSuite/JackBridge/releases)
 2. Open the downloaded `.pkg` file
 3. Follow the installation wizard
 4. Grant System Extension permissions when prompted
-5. Launch ProxyBridge from Applications folder
+5. Launch JackBridge from Applications folder
 
-**Note:** ProxyBridge requires system extension permissions. You need to allow the extension in **System Settings → General → Login Items & Extensions → Network Extension** on first launch.
+**Note:** JackBridge requires system extension permissions. You need to allow the extension in **System Settings → General → Login Items & Extensions → Network Extension** on first launch.
 
 
 ## Configuration
@@ -303,7 +303,7 @@ Action: PROXY
 
 #### Exporting and Importing Rules
 
-ProxyBridge allows you to export selected rules to a JSON file and import rules from previously exported files.
+JackBridge allows you to export selected rules to a JSON file and import rules from previously exported files.
 
 **Export Rules:**
 1. Select one or more rules using the checkboxes
@@ -332,9 +332,9 @@ ProxyBridge allows you to export selected rules to a JSON file and import rules 
 
 ## Usage
 
-### Starting ProxyBridge
+### Starting JackBridge
 
-1. Launch ProxyBridge from Applications
+1. Launch JackBridge from Applications
 2. The app runs in the menu bar
 3. Configure proxy settings and rules as needed
 4. Enable the system extension when prompted
@@ -354,7 +354,7 @@ Connection logs are available in the main window, showing:
 - **Proxy Settings** - Configure proxy server details
 - **Proxy Rules** - Manage traffic routing rules
 - **Help** - Check for updates and about information
-- **Quit** - Exit ProxyBridge
+- **Quit** - Exit JackBridge
 
 ## Limitations
 
@@ -394,28 +394,28 @@ Connection logs are available in the main window, showing:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/InterceptSuite/ProxyBridge.git
-   cd ProxyBridge/MacOS/ProxyBridge
+   git clone https://github.com/InterceptSuite/JackBridge.git
+   cd JackBridge/MacOS/JackBridge
    ```
 
 2. Open the project:
    ```bash
-   open ProxyBridge.xcodeproj
+   open JackBridge.xcodeproj
    ```
 
 3. Configure code signing in Xcode:
-   - Select the ProxyBridge target
+   - Select the JackBridge target
    - Go to Signing & Capabilities
    - Select your development team
 
 4. Build the project:
    ```bash
-   xcodebuild -project ProxyBridge.xcodeproj -scheme ProxyBridge -configuration Release build
+   xcodebuild -project JackBridge.xcodeproj -scheme JackBridge -configuration Release build
    ```
 
 5. The built application will be in:
    ```
-   ~/Library/Developer/Xcode/DerivedData/ProxyBridge-*/Build/Products/Release/ProxyBridge.app
+   ~/Library/Developer/Xcode/DerivedData/JackBridge-*/Build/Products/Release/JackBridge.app
    ```
 
 ### Creating an Installer

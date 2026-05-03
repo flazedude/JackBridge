@@ -1,7 +1,7 @@
 #include "gui.h"
 
-#define CONFIG_DIR "/etc/proxybridge"
-#define CONFIG_PATH "/etc/proxybridge/config.ini"
+#define CONFIG_DIR "/etc/jackbridge"
+#define CONFIG_PATH "/etc/jackbridge/config.ini"
 
 // save config
 void save_config() {

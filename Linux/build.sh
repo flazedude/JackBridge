@@ -21,7 +21,7 @@ cd "$SCRIPT_DIR/src"
 make clean 2>/dev/null || true
 make
 
-if [ -f "libproxybridge.so" ]; then
+if [ -f "libjackbridge.so" ]; then
     echo "Library build successful"
 else
     echo "Library build failed!"
@@ -35,7 +35,7 @@ cd "$SCRIPT_DIR/cli"
 make clean 2>/dev/null || true
 make
 
-if [ -f "ProxyBridge" ]; then
+if [ -f "JackBridge" ]; then
     echo "CLI build successful"
 else
     echo "CLI build failed!"
@@ -46,10 +46,10 @@ echo ""
 # Move binaries to output
 echo "=== Building GUI ==="
 cd "$SCRIPT_DIR"
-rm -f ProxyBridgeGUI
+rm -f JackBridgeGUI
 if pkg-config --exists gtk+-3.0; then
     GUI_CFLAGS="-Wall -Wno-unused-parameter -O3 -Isrc -D_GNU_SOURCE -fstack-protector-strong -D_FORTIFY_SOURCE=2 -fPIE -Wformat -Wformat-security -Werror=format-security -fno-strict-overflow -fno-delete-null-pointer-checks -fwrapv $(pkg-config --cflags gtk+-3.0)"
-    GUI_LDFLAGS="-Lsrc -pie -Wl,-z,relro,-z,now -Wl,-z,noexecstack -s -Wl,-rpath,'$ORIGIN/.' -lproxybridge -lpthread $(pkg-config --libs gtk+-3.0) -export-dynamic"
+    GUI_LDFLAGS="-Lsrc -pie -Wl,-z,relro,-z,now -Wl,-z,noexecstack -s -Wl,-rpath,'$ORIGIN/.' -ljackbridge -lpthread $(pkg-config --libs gtk+-3.0) -export-dynamic"
 
     # Compile all GUI source files
     GUI_OBJS=""
@@ -59,7 +59,7 @@ if pkg-config --exists gtk+-3.0; then
         GUI_OBJS="$GUI_OBJS $obj"
     done
 
-    gcc -o ProxyBridgeGUI $GUI_OBJS $GUI_LDFLAGS
+    gcc -o JackBridgeGUI $GUI_OBJS $GUI_LDFLAGS
     
     rm -f gui/*.o
     echo "GUI build successful"
@@ -71,10 +71,10 @@ fi
 
 echo ""
 echo "Moving binaries to output directory..."
-mv "$SCRIPT_DIR/src/libproxybridge.so" "$OUTPUT_DIR/"
-mv "$SCRIPT_DIR/cli/ProxyBridge" "$OUTPUT_DIR/"
-if [ -f ProxyBridgeGUI ]; then
-    mv ProxyBridgeGUI "$OUTPUT_DIR/"
+mv "$SCRIPT_DIR/src/libjackbridge.so" "$OUTPUT_DIR/"
+mv "$SCRIPT_DIR/cli/JackBridge" "$OUTPUT_DIR/"
+if [ -f JackBridgeGUI ]; then
+    mv JackBridgeGUI "$OUTPUT_DIR/"
 fi
 echo "Binaries moved to output"
 echo ""
