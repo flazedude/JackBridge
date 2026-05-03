@@ -36,6 +36,38 @@ Common examples:
 - Deduplicated observed active processes.
 - Kept traffic/activity logging focused inside the main UI.
 
+## JackBridge v2.0 Beta
+
+JackBridge v2.0 beta is an experimental branch focused on adding an optional built-in mihomo proxy engine while keeping the v1.5 external-proxy workflow intact.
+
+New beta work includes:
+
+- Built-in proxy engine option using mihomo.
+- External proxy mode remains available.
+- Portable built-in proxy folders for `core`, `profiles`, `data`, `rules`, and `logs`.
+- Subscription URL and local YAML profile support.
+- Local YAML import with drag/drop-oriented UI work.
+- Runtime profile generation at `core\runtime.yaml`.
+- Mixed-port support, defaulting to `8888`.
+- Controller-port support, defaulting to `9090`.
+- GEO asset update options for `geoip.dat`, `geosite.dat`, `country.mmdb`, and ASN data.
+- DNS override settings for built-in mode.
+- Proxy server selection from loaded profile data.
+- Built-in core lifetime cleanup using a Windows job object.
+- Native loop guards for mihomo, Clash Verge, JackBridge itself, and local proxy ports.
+- Safer rule add/delete behavior when the native service is not running.
+- v2 transparent mode refuses to start while another JackBridge instance is running, to avoid dual WinDivert conflicts with v1.5.
+
+### Known Issues In v2.0 Beta
+
+- v2 transparent mode cannot reliably run at the same time as v1.5 because both use WinDivert-style packet interception. Turn off or exit v1.5 before testing v2 transparent mode.
+- If another `JackBridge.exe` is already running from a different directory, v2 should refuse to enable Proxy On and log a warning instead of hanging.
+- Built-in mihomo is still experimental. The core is launched as `jackbridge-mihomo.exe` so it is clearly JackBridge-owned and not confused with Clash Verge's `verge-mihomo.exe`.
+- Existing v1.5 rules will not automatically bypass `jackbridge-mihomo.exe`; this is another reason to test v2 with v1.5 off.
+- Proxy server selection works from parsed profile/controller data, but the UI is still being refined.
+- macOS support is planned, but v2 built-in proxy work is currently Windows-first.
+- Packaging for v2 beta is not final. Debug output is intentionally not tracked.
+
 ## Changes Compared With ProxyBridge
 
 ProxyBridge provided the original cross-platform proxy routing foundation. JackBridge v1.5 focuses on making the Windows desktop experience easier to use as a daily driver.

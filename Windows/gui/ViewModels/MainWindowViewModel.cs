@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.IO;
 using System.Windows.Input;
 using System.Linq;
 using System.Text;
@@ -39,6 +41,8 @@ public class MainWindowViewModel : ViewModelBase
     private string _newProxyAction = "PROXY";
     private bool _startWithWindows;
     private bool _isProxyEnabled = false;
+    private bool _isApplyingProxyState;
+    private readonly object _proxyStateLock = new();
     private Window? _mainWindow;
     private JackBridgeService? _proxyService;
     private MihomoService? _mihomoService;
@@ -62,6 +66,7 @@ public class MainWindowViewModel : ViewModelBase
     private readonly object _activityLogLock = new();
     private DispatcherTimer? _connectionLogTimer;
     private DispatcherTimer? _activityLogTimer;
+    private DispatcherTimer? _builtInHealthTimer;
 
     public void SetMainWindow(Window window)
     {
@@ -141,19 +146,15 @@ public class MainWindowViewModel : ViewModelBase
             _activityLogTimer.Start();
 
             ApplyProxyRuntimeConfiguration();
-            LoadRulesIntoNativeService();
 
             if (!_isProxyEnabled)
             {
                 QueueActivityLog("Proxy is disabled");
             }
-            else if (StartProxyService())
-            {
-                QueueActivityLog("Proxy is enabled");
-            }
             else
             {
-                QueueActivityLog("ERROR: Failed to start JackBridge service");
+                QueueActivityLog("Restoring proxy state...");
+                Task.Run(() => ApplyProxyStateAsync(true));
             }
         }
         catch (Exception ex)
@@ -371,29 +372,78 @@ public class MainWindowViewModel : ViewModelBase
                 OnPropertyChanged(nameof(ProxyStatusText));
                 OnPropertyChanged(nameof(ProxyToggleText));
 
-                if (_proxyService != null)
-                {
-                    if (value)
-                    {
-                        ApplyProxyRuntimeConfiguration();
-                        if (StartProxyService())
-                            QueueActivityLog("Proxy enabled");
-                        else
-                            QueueActivityLog("ERROR: Failed to enable proxy");
-                    }
-                    else
-                    {
-                        _mihomoService?.Stop(QueueActivityLog);
-                        if (_proxyService.Stop())
-                            QueueActivityLog("Proxy disabled");
-                        else
-                            QueueActivityLog("ERROR: Failed to disable proxy");
-                    }
-                }
+                if (_isApplyingProxyState)
+                    return;
+
+                var requestedState = value;
+                Task.Run(() => ApplyProxyStateAsync(requestedState));
 
                 SaveConfigurationInternal();
             }
         }
+    }
+
+    private void ApplyProxyStateAsync(bool enable)
+    {
+        if (_proxyService == null)
+            return;
+
+        lock (_proxyStateLock)
+        {
+            try
+            {
+                if (enable)
+                {
+                    QueueActivityLog("Starting proxy...");
+                    ApplyProxyRuntimeConfiguration();
+                    if (StartProxyService())
+                    {
+                        StartBuiltInHealthTimer();
+                        QueueActivityLog("Proxy enabled");
+                        return;
+                    }
+
+                    QueueActivityLog("ERROR: Failed to enable proxy");
+                    SetProxyEnabledFromRuntime(false);
+                }
+                else
+                {
+                    QueueActivityLog("Stopping proxy...");
+                    StopBuiltInHealthTimer();
+                    _mihomoService?.Stop(QueueActivityLog);
+                    if (_proxyService.Stop())
+                        QueueActivityLog("Proxy disabled");
+                    else
+                        QueueActivityLog("ERROR: Failed to disable proxy");
+                }
+            }
+            catch (Exception ex)
+            {
+                QueueActivityLog($"ERROR: Proxy state change failed: {ex.Message}");
+                if (enable)
+                    SetProxyEnabledFromRuntime(false);
+            }
+            finally
+            {
+                SaveConfigurationInternal();
+            }
+        }
+    }
+
+    private void SetProxyEnabledFromRuntime(bool value)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            _isApplyingProxyState = true;
+            try
+            {
+                IsProxyEnabled = value;
+            }
+            finally
+            {
+                _isApplyingProxyState = false;
+            }
+        });
     }
 
     public string ProxyStatusText => IsProxyEnabled ? "Proxy On" : "Proxy Off";
@@ -475,23 +525,40 @@ public class MainWindowViewModel : ViewModelBase
                     _currentProxyPassword = settings.ProxyPassword;
                     _builtInProxy = settings.BuiltInProxy;
 
-                    if (_proxyService != null && !_proxyEngine.Equals("BuiltIn", StringComparison.OrdinalIgnoreCase) && ushort.TryParse(_currentProxyPort, out ushort portNum))
+                    ApplyProxyRuntimeConfiguration();
+                    QueueActivityLog(_proxyEngine.Equals("BuiltIn", StringComparison.OrdinalIgnoreCase)
+                        ? $"Proxy engine set to built-in mihomo at 127.0.0.1:{_builtInProxy.MixedPort}"
+                        : $"Proxy engine set to external {_currentProxyType} {_currentProxyIp}:{_currentProxyPort}");
+
+                    if (!_proxyEngine.Equals("BuiltIn", StringComparison.OrdinalIgnoreCase))
                     {
-                        if (!_proxyService.SetProxyConfig(_currentProxyType, _currentProxyIp, portNum, _currentProxyUsername, _currentProxyPassword))
-                        {
-                            QueueActivityLog("ERROR: Failed to set proxy config");
-                        }
+                        _mihomoService?.Stop(QueueActivityLog);
                     }
 
                     if (_isProxyEnabled)
                     {
-                        _proxyService?.Stop();
-                        _mihomoService?.Stop(QueueActivityLog);
-                        ApplyProxyRuntimeConfiguration();
-                        if (StartProxyService())
-                            QueueActivityLog("Proxy settings applied");
-                        else
-                            QueueActivityLog("ERROR: Failed to apply proxy settings");
+                        Task.Run(() =>
+                        {
+                            try
+                            {
+                                StopBuiltInHealthTimer();
+                                _proxyService?.Stop();
+                                _mihomoService?.Stop(QueueActivityLog);
+                                ApplyProxyRuntimeConfiguration();
+                                if (StartProxyService())
+                                    QueueActivityLog("Proxy settings applied");
+                                else
+                                {
+                                    QueueActivityLog("ERROR: Failed to apply proxy settings");
+                                    SetProxyEnabledFromRuntime(false);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                QueueActivityLog($"ERROR: Failed to apply proxy settings: {ex.Message}");
+                                SetProxyEnabledFromRuntime(false);
+                            }
+                        });
                     }
 
                     SaveConfigurationInternal();
@@ -515,26 +582,11 @@ public class MainWindowViewModel : ViewModelBase
                 proxyRules: ProxyRules,
                 onAddRule: (rule) =>
                 {
-                    if (_proxyService != null)
-                    {
-                        uint ruleId = _proxyService.AddRule(
-                            rule.ProcessName,
-                            rule.TargetHosts,
-                            rule.TargetPorts,
-                            rule.Protocol,
-                            rule.Action);
-                        if (ruleId > 0)
-                        {
-                            rule.RuleId = ruleId;
-                            InsertRuleInPriorityOrder(rule);
-                            _proxyService.MoveRuleToPosition(rule.RuleId, (uint)rule.Index);
-                            SaveConfigurationInternal();
-                        }
-                        else
-                        {
-                            QueueActivityLog("ERROR: Failed to add rule");
-                        }
-                    }
+                    TrySyncRuleToNative(rule);
+                    InsertRuleInPriorityOrder(rule);
+                    if (rule.RuleId > 0)
+                        _proxyService?.MoveRuleToPosition(rule.RuleId, (uint)rule.Index);
+                    SaveConfigurationInternal();
                 },
                 onClose: () =>
                 {
@@ -702,23 +754,13 @@ public class MainWindowViewModel : ViewModelBase
                 IsStatic = false
             };
 
-            if (_proxyService != null)
-            {
-                var ruleId = _proxyService.AddRule(NewProcessName, "*", "*", "TCP", NewProxyAction);
-                if (ruleId > 0)
-                {
-                    rule.RuleId = ruleId;
-                    InsertRuleInPriorityOrder(rule);
-                    _proxyService.MoveRuleToPosition(rule.RuleId, (uint)rule.Index);
-                    SaveConfigurationInternal();
-                    IsAddRuleViewOpen = false;
-                    NewProcessName = "";
-                }
-                else
-                {
-                    QueueActivityLog("ERROR: Failed to add rule");
-                }
-            }
+            TrySyncRuleToNative(rule);
+            InsertRuleInPriorityOrder(rule);
+            if (rule.RuleId > 0)
+                _proxyService?.MoveRuleToPosition(rule.RuleId, (uint)rule.Index);
+            SaveConfigurationInternal();
+            IsAddRuleViewOpen = false;
+            NewProcessName = "";
         });
 
         CancelAddRuleCommand = new RelayCommand(() =>
@@ -865,30 +907,28 @@ public class MainWindowViewModel : ViewModelBase
             Index = ProxyRules.Count + 1
         };
 
-        if (_proxyService == null)
-        {
-            QueueActivityLog("ERROR: Proxy service is not available");
-            return;
-        }
+        TrySyncRuleToNative(rule);
+        InsertRuleInPriorityOrder(rule);
+        if (rule.RuleId > 0)
+            _proxyService?.MoveRuleToPosition(rule.RuleId, (uint)rule.Index);
+        SaveConfigurationInternal();
+        QueueActivityLog($"Added rule for {rule.ProcessName} -> {rule.TargetHosts}:{rule.TargetPorts}");
+    }
 
-        uint ruleId = _proxyService.AddRule(
+    private void TrySyncRuleToNative(ProxyRule rule)
+    {
+        if (_proxyService == null || rule.RuleId > 0)
+            return;
+
+        var ruleId = _proxyService.AddRule(
             rule.ProcessName,
             rule.TargetHosts,
             rule.TargetPorts,
             rule.Protocol,
             rule.Action);
 
-        if (ruleId == 0)
-        {
-            QueueActivityLog($"ERROR: Failed to add rule for {rule.ProcessName}");
-            return;
-        }
-
-        rule.RuleId = ruleId;
-        InsertRuleInPriorityOrder(rule);
-        _proxyService.MoveRuleToPosition(rule.RuleId, (uint)rule.Index);
-        SaveConfigurationInternal();
-        QueueActivityLog($"Added rule for {rule.ProcessName} -> {rule.TargetHosts}:{rule.TargetPorts}");
+        if (ruleId > 0)
+            rule.RuleId = ruleId;
     }
 
     private void InsertRuleInPriorityOrder(ProxyRule rule)
@@ -921,6 +961,7 @@ public class MainWindowViewModel : ViewModelBase
     public void Cleanup()
     {
         try { SaveConfigurationInternal(); } catch { }
+        try { StopBuiltInHealthTimer(); } catch { }
         try { _mihomoService?.Dispose(); _mihomoService = null; } catch { }
         try { _proxyService?.Dispose(); _proxyService = null; } catch { }
     }
@@ -960,6 +1001,8 @@ public class MainWindowViewModel : ViewModelBase
         if (_proxyService == null)
             return;
 
+        AddBuiltInBypassRules();
+
         for (int i = 0; i < ProxyRules.Count; i++)
         {
             var rule = ProxyRules[i];
@@ -987,10 +1030,58 @@ public class MainWindowViewModel : ViewModelBase
         RefreshRuleSectionPriorities();
     }
 
+    private void AddBuiltInBypassRules()
+    {
+        if (_proxyService == null || !_proxyEngine.Equals("BuiltIn", StringComparison.OrdinalIgnoreCase))
+            return;
+
+        var processNames = new[]
+        {
+            "mihomo.exe",
+            "jackbridge-mihomo.exe",
+            "verge-mihomo.exe",
+            "clash-verge.exe",
+            "clash-core-service.exe",
+            "clash-core-service",
+            Path.GetFileName(Environment.ProcessPath ?? "JackBridge.exe")
+        };
+
+        foreach (var processName in processNames.Distinct(StringComparer.OrdinalIgnoreCase))
+        {
+            var ruleId = _proxyService.AddRule(processName, "*", "*", "BOTH", "DIRECT");
+            if (ruleId > 0)
+            {
+                _proxyService.MoveRuleToPosition(ruleId, 1);
+                QueueActivityLog($"Loop guard active: {processName} is routed DIRECT");
+            }
+        }
+
+        var localProxyPorts = new[] { "7890", "7891", "7892", "7897", _builtInProxy.MixedPort, _builtInProxy.ControllerPort }
+            .Where(port => !string.IsNullOrWhiteSpace(port))
+            .Distinct(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var port in localProxyPorts)
+        {
+            var ruleId = _proxyService.AddRule("*", "127.0.0.1,localhost", port, "BOTH", "DIRECT");
+            if (ruleId > 0)
+            {
+                _proxyService.MoveRuleToPosition(ruleId, 1);
+                QueueActivityLog($"Loop guard active: local proxy port {port} is routed DIRECT");
+            }
+        }
+    }
+
     private bool StartProxyService()
     {
         if (_proxyService == null)
             return false;
+
+        if (IsAnotherJackBridgeInstanceRunning())
+        {
+            QueueActivityLog("ERROR: Another JackBridge instance is already running. Turn off/exit v1.5 before enabling v2 transparent proxy.");
+            QueueActivityLog("Built-in mihomo was not started, to avoid WinDivert and relay-port conflicts.");
+            return false;
+        }
 
         if (_proxyEngine.Equals("BuiltIn", StringComparison.OrdinalIgnoreCase))
         {
@@ -1003,6 +1094,84 @@ public class MainWindowViewModel : ViewModelBase
 
         LoadRulesIntoNativeService();
         return _proxyService.Start();
+    }
+
+    private bool IsAnotherJackBridgeInstanceRunning()
+    {
+        try
+        {
+            var currentProcessId = Environment.ProcessId;
+            var currentBaseDirectory = Path.GetFullPath(AppContext.BaseDirectory)
+                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+            return Process.GetProcessesByName("JackBridge").Any(process =>
+            {
+                try
+                {
+                    if (process.Id == currentProcessId)
+                        return false;
+
+                    var processPath = process.MainModule?.FileName;
+                    if (string.IsNullOrWhiteSpace(processPath))
+                        return true;
+
+                    var processDirectory = Path.GetFullPath(Path.GetDirectoryName(processPath) ?? "")
+                        .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+                    return !processDirectory.Equals(currentBaseDirectory, StringComparison.OrdinalIgnoreCase);
+                }
+                catch
+                {
+                    return process.Id != currentProcessId;
+                }
+                finally
+                {
+                    process.Dispose();
+                }
+            });
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private void StartBuiltInHealthTimer()
+    {
+        if (!_proxyEngine.Equals("BuiltIn", StringComparison.OrdinalIgnoreCase))
+            return;
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            _builtInHealthTimer?.Stop();
+            _builtInHealthTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
+            _builtInHealthTimer.Tick += (_, _) =>
+            {
+                if (!_isProxyEnabled || !_proxyEngine.Equals("BuiltIn", StringComparison.OrdinalIgnoreCase))
+                {
+                    StopBuiltInHealthTimer();
+                    return;
+                }
+
+                if (_mihomoService?.IsListening(_builtInProxy) == true)
+                    return;
+
+                QueueActivityLog("ERROR: Built-in proxy core stopped or port is not listening; disabling proxy");
+                StopBuiltInHealthTimer();
+                _proxyService?.Stop();
+                SetProxyEnabledFromRuntime(false);
+            };
+            _builtInHealthTimer.Start();
+        });
+    }
+
+    private void StopBuiltInHealthTimer()
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            _builtInHealthTimer?.Stop();
+            _builtInHealthTimer = null;
+        });
     }
 
     private string FilterLog(string log, string searchText)

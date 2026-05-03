@@ -109,6 +109,7 @@ static BOOL g_traffic_logging_enabled = TRUE;
 static char g_proxy_host[256] = "";  // Can be IP address or hostname
 static UINT16 g_proxy_port = 0;
 static UINT16 g_local_relay_port = LOCAL_PROXY_PORT;
+static UINT16 g_local_udp_relay_port = LOCAL_UDP_RELAY_PORT;
 static ProxyType g_proxy_type = PROXY_TYPE_SOCKS5;
 static char g_proxy_username[256] = "";
 static char g_proxy_password[256] = "";
@@ -200,6 +201,49 @@ static void configure_udp_socket(SOCKET sock, int bufsize, DWORD timeout)
     setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, (char*)&timeout, sizeof(timeout));
 }
 
+static BOOL is_local_port_available(UINT16 port, int socket_type, int protocol)
+{
+    SOCKET test_socket = socket(AF_INET, socket_type, protocol);
+    if (test_socket == INVALID_SOCKET)
+        return FALSE;
+
+    int exclusive = 1;
+    setsockopt(test_socket, SOL_SOCKET, SO_EXCLUSIVEADDRUSE, (const char*)&exclusive, sizeof(exclusive));
+
+    struct sockaddr_in addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = INADDR_ANY;
+    addr.sin_port = htons(port);
+
+    BOOL available = bind(test_socket, (struct sockaddr*)&addr, sizeof(addr)) != SOCKET_ERROR;
+    closesocket(test_socket);
+    return available;
+}
+
+static BOOL choose_local_relay_ports(void)
+{
+    WSADATA wsa_data;
+    if (WSAStartup(MAKEWORD(2, 2), &wsa_data) != 0)
+        return FALSE;
+
+    for (UINT16 tcp_port = LOCAL_PROXY_PORT; tcp_port < LOCAL_PROXY_PORT + 200; tcp_port += 2)
+    {
+        UINT16 udp_port = (UINT16)(tcp_port + 1);
+        if (is_local_port_available(tcp_port, SOCK_STREAM, IPPROTO_TCP) &&
+            is_local_port_available(udp_port, SOCK_DGRAM, IPPROTO_UDP))
+        {
+            g_local_relay_port = tcp_port;
+            g_local_udp_relay_port = udp_port;
+            WSACleanup();
+            return TRUE;
+        }
+    }
+
+    WSACleanup();
+    return FALSE;
+}
+
 static int send_all(SOCKET sock, const char *buf, int len)
 {
     int sent = 0;
@@ -245,6 +289,7 @@ static DWORD get_cached_pid(UINT32 src_ip, UINT16 src_port, BOOL is_udp);
 static void cache_pid(UINT32 src_ip, UINT16 src_port, DWORD pid, BOOL is_udp);
 static void clear_pid_cache(void);
 static void update_has_active_rules(void);
+static BOOL is_other_jackbridge_relay_port(UINT16 port);
 
 
 static DWORD WINAPI packet_processor(LPVOID arg)
@@ -284,7 +329,7 @@ static DWORD WINAPI packet_processor(LPVOID arg)
         {
             if (addr.Outbound)
             {
-                if (udp_header->SrcPort == htons(LOCAL_UDP_RELAY_PORT))
+                if (udp_header->SrcPort == htons(g_local_udp_relay_port))
                 {
                     UINT16 dst_port = ntohs(udp_header->DstPort);
                     UINT32 orig_dest_ip;
@@ -301,7 +346,7 @@ static DWORD WINAPI packet_processor(LPVOID arg)
                 {
                     UINT16 src_port = ntohs(udp_header->SrcPort);
                     UINT32 temp_addr = ip_header->DstAddr;
-                    udp_header->DstPort = htons(LOCAL_UDP_RELAY_PORT);
+                    udp_header->DstPort = htons(g_local_udp_relay_port);
                     ip_header->DstAddr = ip_header->SrcAddr;
                     ip_header->SrcAddr = temp_addr;
                     addr.Outbound = FALSE;
@@ -312,6 +357,12 @@ static DWORD WINAPI packet_processor(LPVOID arg)
                     UINT32 src_ip = ip_header->SrcAddr;
                     UINT32 dest_ip = ip_header->DstAddr;
                     UINT16 dest_port = ntohs(udp_header->DstPort);
+
+                    if (is_other_jackbridge_relay_port(src_port) || is_other_jackbridge_relay_port(dest_port))
+                    {
+                        WinDivertSend(windivert_handle, packet, packet_len, NULL, &addr);
+                        continue;
+                    }
 
                     // if no rule configuree all connection direct with no checks avoid unwanted memory and pocessing whcich could delay
                     if (!g_has_active_rules && g_connection_callback == NULL)
@@ -391,8 +442,8 @@ static DWORD WINAPI packet_processor(LPVOID arg)
                     {
                         add_connection(src_port, src_ip, dest_ip, dest_port);
 
-                        // redirect to UDP relay server at 127.0.0.1:34011
-                        udp_header->DstPort = htons(LOCAL_UDP_RELAY_PORT);
+                        // redirect to UDP relay server at 127.0.0.1
+                        udp_header->DstPort = htons(g_local_udp_relay_port);
                         ip_header->DstAddr = htonl(INADDR_LOOPBACK);
 
                         // check if source is localhos
@@ -411,7 +462,7 @@ static DWORD WINAPI packet_processor(LPVOID arg)
             }
             else
             {
-                if (udp_header->DstPort != htons(LOCAL_UDP_RELAY_PORT))
+            if (udp_header->DstPort != htons(g_local_udp_relay_port))
                 {
                     // Unmodified packet no checksum needed
                     WinDivertSend(windivert_handle, packet, packet_len, NULL, &addr);
@@ -483,6 +534,12 @@ static DWORD WINAPI packet_processor(LPVOID arg)
                 UINT32 src_ip = ip_header->SrcAddr;
                 UINT32 orig_dest_ip = ip_header->DstAddr;
                 UINT16 orig_dest_port = ntohs(tcp_header->DstPort);
+
+                if (is_other_jackbridge_relay_port(src_port) || is_other_jackbridge_relay_port(orig_dest_port))
+                {
+                    WinDivertSend(windivert_handle, packet, packet_len, NULL, &addr);
+                    continue;
+                }
 
                 // avoid rule pocess and packet process if no rules
                 if (!g_has_active_rules && g_connection_callback == NULL)
@@ -1095,6 +1152,14 @@ static BOOL is_broadcast_or_multicast(UINT32 ip)
     return FALSE;
 }
 
+static BOOL is_other_jackbridge_relay_port(UINT16 port)
+{
+    if (port < LOCAL_PROXY_PORT || port >= LOCAL_PROXY_PORT + 200)
+        return FALSE;
+
+    return port != g_local_relay_port && port != g_local_udp_relay_port;
+}
+
 // Unified rule matching function for both TCP and UDP
 // Matches rules by process name, IP, port, and protocol
 static RuleAction match_rule(const char *process_name, UINT32 dest_ip, UINT16 dest_port, BOOL is_udp)
@@ -1163,6 +1228,17 @@ static RuleAction check_process_rule(UINT32 src_ip, UINT16 src_port, UINT32 dest
 
     if (!get_process_name_from_pid(pid, process_name, sizeof(process_name)))
         return RULE_ACTION_DIRECT;
+
+    const char *process_filename = extract_filename(process_name);
+    if (_stricmp(process_filename, "mihomo.exe") == 0 ||
+        _stricmp(process_filename, "jackbridge-mihomo.exe") == 0 ||
+        _stricmp(process_filename, "verge-mihomo.exe") == 0 ||
+        _stricmp(process_filename, "clash-verge.exe") == 0 ||
+        _stricmp(process_filename, "clash-core-service.exe") == 0 ||
+        _stricmp(process_filename, "clash-core-service") == 0)
+    {
+        return RULE_ACTION_DIRECT;
+    }
 
     // Use unified rule matching function
     RuleAction action = match_rule(process_name, dest_ip, dest_port, is_udp);
@@ -1562,7 +1638,7 @@ static DWORD WINAPI udp_relay_server(LPVOID arg)
     memset(&local_addr, 0, sizeof(local_addr));
     local_addr.sin_family = AF_INET;
     local_addr.sin_addr.s_addr = INADDR_ANY;
-    local_addr.sin_port = htons(LOCAL_UDP_RELAY_PORT);
+    local_addr.sin_port = htons(g_local_udp_relay_port);
 
     if (bind(udp_relay_socket, (struct sockaddr *)&local_addr, sizeof(local_addr)) == SOCKET_ERROR)
     {
@@ -1575,7 +1651,7 @@ static DWORD WINAPI udp_relay_server(LPVOID arg)
     // Try initial UDP ASSOCIATE (non-fatal if it fails)
     udp_associate_connected = establish_udp_associate();
 
-    log_message("UDP relay listening on port %d", LOCAL_UDP_RELAY_PORT);
+    log_message("UDP relay listening on port %d", g_local_udp_relay_port);
     if (!udp_associate_connected)
     {
         log_message("UDP ASSOCIATE not available yet - will retry when needed");
@@ -2847,6 +2923,12 @@ JACKBRIDGE_API BOOL JackBridge_Start(void)
             return FALSE;
     }
 
+    if (!choose_local_relay_ports())
+    {
+        log_message("Failed to find available local relay ports");
+        return FALSE;
+    }
+
     running = TRUE;
 
     proxy_thread = CreateThread(NULL, 1, local_proxy_server, NULL, 0, NULL);
@@ -2887,7 +2969,7 @@ JACKBRIDGE_API BOOL JackBridge_Start(void)
 
     snprintf(filter, sizeof(filter),
         "(tcp and (outbound or loopback or (tcp.DstPort == %d or tcp.SrcPort == %d))) or (udp and (outbound or loopback or (udp.DstPort == %d or udp.SrcPort == %d)))",
-        g_local_relay_port, g_local_relay_port, LOCAL_UDP_RELAY_PORT, LOCAL_UDP_RELAY_PORT);
+        g_local_relay_port, g_local_relay_port, g_local_udp_relay_port, g_local_udp_relay_port);
 
     // Note: Added 'loopback' to filter to capture localhost (127.x.x.x) traffic
     // This enables proxying local connections for MITM scenarios
@@ -2933,6 +3015,7 @@ JACKBRIDGE_API BOOL JackBridge_Start(void)
 
     log_message("JackBridge started");
     log_message("Local relay: localhost:%d", g_local_relay_port);
+    log_message("UDP relay: localhost:%d", g_local_udp_relay_port);
     log_message("%s proxy: %s:%d", g_proxy_type == PROXY_TYPE_HTTP ? "HTTP" : "SOCKS5", g_proxy_host, g_proxy_port);
 
     int rule_count = 0;
