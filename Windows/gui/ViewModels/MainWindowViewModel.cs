@@ -21,7 +21,7 @@ public class MainWindowViewModel : ViewModelBase
     private const int MAX_CONNECTION_LOG_LINES = 100;
     private const int MAX_ACTIVITY_LOG_LINES = 100;
 
-    private string _title = "JackBridge v2.0 Beta";
+    private string _title = "JackBridge v3.0 Beta";
     private int _selectedTabIndex;
     private string _connectionsLog = "";
     private string _activityLog = "";
@@ -76,7 +76,10 @@ public class MainWindowViewModel : ViewModelBase
             return;
 
         _isServiceInitialized = true;
+        _isApplyingProxyState = true;
         LoadConfiguration();
+        IsProxyEnabled = false;
+        _isApplyingProxyState = false;
 
         try
         {
@@ -150,15 +153,7 @@ public class MainWindowViewModel : ViewModelBase
 
             ApplyProxyRuntimeConfiguration();
 
-            if (!_isProxyEnabled)
-            {
-                QueueActivityLog("Proxy is disabled");
-            }
-            else
-            {
-                QueueActivityLog("Restoring proxy state...");
-                Task.Run(() => ApplyProxyStateAsync(true));
-            }
+            QueueActivityLog("Proxy is disabled — toggle it on when ready");
         }
         catch (Exception ex)
         {
@@ -188,6 +183,8 @@ public class MainWindowViewModel : ViewModelBase
             {
                 if (string.IsNullOrWhiteSpace(_connectionsSearchText))
                     FilteredConnectionsLog = _connectionsLog;
+                if (_homeVm != null)
+                    _homeVm.RecentConnections = _connectionsLog;
             }
         }
     }
@@ -213,6 +210,8 @@ public class MainWindowViewModel : ViewModelBase
 
                 if (string.IsNullOrWhiteSpace(_activitySearchText))
                     FilteredActivityLog = _activityLog;
+                if (_homeVm != null)
+                    _homeVm.RecentActivity = _activityLog;
             }
         }
     }
@@ -375,6 +374,9 @@ public class MainWindowViewModel : ViewModelBase
                 OnPropertyChanged(nameof(ProxyStatusText));
                 OnPropertyChanged(nameof(ProxyToggleText));
 
+                if (_homeVm != null)
+                    _homeVm.IsProxyEnabled = value;
+
                 if (_isApplyingProxyState)
                     return;
 
@@ -531,6 +533,8 @@ public class MainWindowViewModel : ViewModelBase
     public ICommand NavigateHomeCommand { get; }
     public ICommand NavigateConnectionsCommand { get; }
     public ICommand NavigateActivityCommand { get; }
+    public ICommand NavigateToRulesCommand { get; }
+    public ICommand NavigateToSettingsCommand { get; }
 
     // Sidebar navigation
     private object? _activeView;
@@ -564,11 +568,13 @@ public class MainWindowViewModel : ViewModelBase
 
     public MainWindowViewModel()
     {
-        EnsureChildViewModels();
-
         NavigateHomeCommand = new RelayCommand(NavigateToHome);
         NavigateConnectionsCommand = new RelayCommand(NavigateToConnections);
         NavigateActivityCommand = new RelayCommand(NavigateToActivity);
+        NavigateToRulesCommand = new RelayCommand(NavigateToRules);
+        NavigateToSettingsCommand = new RelayCommand(NavigateToSettings);
+
+        EnsureChildViewModels();
 
         ShowProxySettingsCommand = new RelayCommand(() =>
         {
@@ -658,6 +664,9 @@ public class MainWindowViewModel : ViewModelBase
                 proxyService: _proxyService,
                 onConfigChanged: SaveConfigurationInternal
             );
+
+            if (_mainWindow != null)
+                viewModel.SetWindow(_mainWindow);
 
             ActiveView = viewModel;
         });
@@ -867,7 +876,14 @@ public class MainWindowViewModel : ViewModelBase
 
     public void NavigateToRules()
     {
-        ShowProxyRulesCommand.Execute(null);
+        try
+        {
+            ShowProxyRulesCommand.Execute(null);
+        }
+        catch (Exception ex)
+        {
+            QueueActivityLog($"ERROR opening rules: {ex.Message}");
+        }
     }
 
     public void NavigateToSettings()
@@ -884,7 +900,7 @@ public class MainWindowViewModel : ViewModelBase
     {
         if (_homeVm == null)
         {
-            _homeVm = new HomeViewModel(ToggleProxyEnabledCommand);
+            _homeVm = new HomeViewModel(ToggleProxyEnabledCommand, NavigateToRulesCommand, NavigateToSettingsCommand);
             _connectionsVm = new ConnectionsViewModel(
                 ObservedProcesses,
                 SearchConnectionsCommand,
@@ -905,6 +921,7 @@ public class MainWindowViewModel : ViewModelBase
             _homeVm.EngineType = _proxyEngine;
             _homeVm.ActiveRulesCount = ProxyRules.Count(r => r.IsEnabled);
             _homeVm.RecentActivity = _activityLog;
+            _homeVm.RecentConnections = _connectionsLog;
         }
         if (_connectionsVm != null)
         {

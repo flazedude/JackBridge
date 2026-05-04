@@ -56,11 +56,25 @@ public class HomeViewModel : ViewModelBase
         set => SetProperty(ref _recentActivity, value);
     }
 
+    private string _recentConnections = "";
+
+    public string RecentConnections
+    {
+        get => _recentConnections;
+        set => SetProperty(ref _recentConnections, value);
+    }
+
     public ICommand ToggleProxyCommand { get; }
+    public ICommand OpenRulesCommand { get; }
+    public ICommand OpenSettingsCommand { get; }
 
     public HomeViewModel(
-        ICommand toggleProxyCommand)
+        ICommand toggleProxyCommand,
+        ICommand openRulesCommand,
+        ICommand openSettingsCommand)
     {
         ToggleProxyCommand = toggleProxyCommand;
+        OpenRulesCommand = openRulesCommand;
+        OpenSettingsCommand = openSettingsCommand;
     }
 }
