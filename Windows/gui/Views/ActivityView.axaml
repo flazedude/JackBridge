@@ -1,0 +1,96 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:JackBridge.GUI.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="500"
+        x:Class="JackBridge.GUI.Views.ActivityView"
+        x:DataType="vm:ActivityViewModel"
+        x:CompileBindings="True"
+        Background="Transparent">
+
+    <UserControl.Styles>
+        <Style Selector="Border.logEntry">
+            <Setter Property="Background" Value="#FF1E1E1E"/>
+            <Setter Property="BorderBrush" Value="#FF2D2D30"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="Padding" Value="12,6"/>
+        </Style>
+        <Style Selector="Border.levelBadge">
+            <Setter Property="CornerRadius" Value="3"/>
+            <Setter Property="Padding" Value="6,2"/>
+        </Style>
+    </UserControl.Styles>
+
+    <DockPanel>
+        <!-- Search + Actions Bar -->
+        <Border DockPanel.Dock="Top"
+                Background="#FF1E1E1E"
+                Padding="12"
+                BorderBrush="#FF3F3F46"
+                BorderThickness="0,0,0,1">
+            <Grid ColumnDefinitions="*,Auto,Auto">
+                <TextBox Grid.Column="0"
+                         Text="{Binding SearchText}"
+                         Watermark="Search activity (press Enter)..."
+                         Margin="0,0,8,0">
+                    <TextBox.KeyBindings>
+                        <KeyBinding Gesture="Enter" Command="{Binding SearchCommand}"/>
+                    </TextBox.KeyBindings>
+                </TextBox>
+                <Button Grid.Column="1"
+                        Content="Add Rule"
+                        Classes="secondary"
+                        Command="{Binding AddRuleCommand}"
+                        Padding="12,6" Margin="0,0,8,0"/>
+                <Button Grid.Column="2"
+                        Content="Clear"
+                        Classes="secondary"
+                        Command="{Binding ClearCommand}"
+                        Padding="12,6"/>
+            </Grid>
+        </Border>
+
+        <!-- Card-based Activity Log -->
+        <Grid>
+            <ScrollViewer IsVisible="{Binding HasEntries}">
+                <ItemsControl ItemsSource="{Binding LogEntries}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:LogEntry}">
+                            <Border Classes="logEntry">
+                                <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="10">
+                                    <TextBlock Grid.Column="0"
+                                               Text="{Binding Timestamp}"
+                                               Foreground="#FF656565"
+                                               FontFamily="Consolas,monospace"
+                                               FontSize="12"
+                                               VerticalAlignment="Center"/>
+                                    <Border Grid.Column="1"
+                                            Classes="levelBadge"
+                                            Background="{Binding LevelColor}"
+                                            VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Level}"
+                                                   FontSize="10"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="#FFFFFFFF"/>
+                                    </Border>
+                                    <TextBlock Grid.Column="2"
+                                               Text="{Binding Message}"
+                                               Foreground="#FFD4D4D4"
+                                               FontSize="12"
+                                               TextWrapping="Wrap"
+                                               VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+            <TextBlock Text="No activity yet..."
+                       Foreground="#FF656565"
+                       FontSize="13"
+                       Margin="16"
+                       IsVisible="{Binding HasNoEntries}"/>
+        </Grid>
+    </DockPanel>
+</UserControl>

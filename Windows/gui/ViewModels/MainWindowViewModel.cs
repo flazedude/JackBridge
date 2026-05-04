@@ -527,8 +527,49 @@ public class MainWindowViewModel : ViewModelBase
     public ICommand SaveNewRuleCommand { get; }
     public ICommand CancelAddRuleCommand { get; }
 
+    // Sidebar navigation commands
+    public ICommand NavigateHomeCommand { get; }
+    public ICommand NavigateConnectionsCommand { get; }
+    public ICommand NavigateActivityCommand { get; }
+
+    // Sidebar navigation
+    private object? _activeView;
+    private HomeViewModel? _homeVm;
+    private ConnectionsViewModel? _connectionsVm;
+    private ActivityViewModel? _activityVm;
+
+    public object? ActiveView
+    {
+        get => _activeView;
+        set => SetProperty(ref _activeView, value);
+    }
+
+    public HomeViewModel? HomeVm
+    {
+        get => _homeVm;
+        set => SetProperty(ref _homeVm, value);
+    }
+
+    public ConnectionsViewModel? ConnectionsVm
+    {
+        get => _connectionsVm;
+        set => SetProperty(ref _connectionsVm, value);
+    }
+
+    public ActivityViewModel? ActivityVm
+    {
+        get => _activityVm;
+        set => SetProperty(ref _activityVm, value);
+    }
+
     public MainWindowViewModel()
     {
+        EnsureChildViewModels();
+
+        NavigateHomeCommand = new RelayCommand(NavigateToHome);
+        NavigateConnectionsCommand = new RelayCommand(NavigateToConnections);
+        NavigateActivityCommand = new RelayCommand(NavigateToActivity);
+
         ShowProxySettingsCommand = new RelayCommand(() =>
         {
             var viewModel = new ProxySettingsViewModel(
@@ -586,22 +627,20 @@ public class MainWindowViewModel : ViewModelBase
                     }
 
                     SaveConfigurationInternal();
-                    ClosePanel();
+                    NavigateToHome();
                 },
                 onClose: () =>
                 {
-                    ClosePanel();
+                    NavigateToHome();
                 },
                 proxyService: _proxyService
             );
 
-            OpenPanel(viewModel, 640);
+            ActiveView = viewModel;
         });
 
         ShowProxyRulesCommand = new RelayCommand(() =>
         {
-            Window? rulesWindow = null;
-
             var viewModel = new ProxyRulesViewModel(
                 proxyRules: ProxyRules,
                 onAddRule: (rule) =>
@@ -614,42 +653,18 @@ public class MainWindowViewModel : ViewModelBase
                 },
                 onClose: () =>
                 {
-                    rulesWindow?.Close();
+                    NavigateToHome();
                 },
                 proxyService: _proxyService,
                 onConfigChanged: SaveConfigurationInternal
             );
 
-            rulesWindow = new Window
-            {
-                Title = "Process Rules - JackBridge v2.0 Beta",
-                Width = 720,
-                Height = 560,
-                MinWidth = 640,
-                MinHeight = 420,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                Icon = _mainWindow?.Icon,
-                Content = new ProxyRulesWindow
-                {
-                    DataContext = viewModel
-                }
-            };
-
-            viewModel.SetWindow(rulesWindow);
-
-            if (_mainWindow != null)
-            {
-                rulesWindow.Show(_mainWindow);
-            }
-            else
-            {
-                rulesWindow.Show();
-            }
+            ActiveView = viewModel;
         });
 
         ShowAboutCommand = new RelayCommand(() =>
         {
-            OpenPanel(new AboutViewModel(ClosePanel), 520);
+            ActiveView = new AboutViewModel(NavigateToHome);
         });
 
         ToggleDnsViaProxyCommand = new RelayCommand(() =>
@@ -827,6 +842,76 @@ public class MainWindowViewModel : ViewModelBase
         IsProxyRulesDialogOpen = false;
         IsProxySettingsDialogOpen = false;
         ClosePanel();
+    }
+
+    public void NavigateToHome()
+    {
+        EnsureChildViewModels();
+        UpdateChildViewModels();
+        ActiveView = _homeVm;
+    }
+
+    public void NavigateToConnections()
+    {
+        EnsureChildViewModels();
+        UpdateChildViewModels();
+        ActiveView = _connectionsVm;
+    }
+
+    public void NavigateToActivity()
+    {
+        EnsureChildViewModels();
+        UpdateChildViewModels();
+        ActiveView = _activityVm;
+    }
+
+    public void NavigateToRules()
+    {
+        ShowProxyRulesCommand.Execute(null);
+    }
+
+    public void NavigateToSettings()
+    {
+        ShowProxySettingsCommand.Execute(null);
+    }
+
+    public void NavigateToAbout()
+    {
+        ShowAboutCommand.Execute(null);
+    }
+
+    private void EnsureChildViewModels()
+    {
+        if (_homeVm == null)
+        {
+            _homeVm = new HomeViewModel(ToggleProxyEnabledCommand);
+            _connectionsVm = new ConnectionsViewModel(
+                ObservedProcesses,
+                SearchConnectionsCommand,
+                ClearConnectionsLogCommand,
+                AddObservedProcessRuleCommand);
+            _activityVm = new ActivityViewModel(
+                SearchActivityCommand,
+                ClearActivityLogCommand,
+                AddRuleCommand);
+        }
+    }
+
+    public void UpdateChildViewModels()
+    {
+        if (_homeVm != null)
+        {
+            _homeVm.IsProxyEnabled = _isProxyEnabled;
+            _homeVm.EngineType = _proxyEngine;
+            _homeVm.ActiveRulesCount = ProxyRules.Count(r => r.IsEnabled);
+            _homeVm.RecentActivity = _activityLog;
+        }
+        if (_connectionsVm != null)
+        {
+            _connectionsVm.HasObservedProcesses = HasObservedProcesses;
+            _connectionsVm.SearchText = _connectionsSearchText;
+            _connectionsVm.FilteredLog = _filteredConnectionsLog;
+        }
     }
 
     private void OpenPanel(object viewModel, double width)

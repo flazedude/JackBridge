@@ -1,0 +1,125 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:JackBridge.GUI.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="550"
+        x:Class="JackBridge.GUI.Views.HomeView"
+        x:DataType="vm:HomeViewModel"
+        x:CompileBindings="True"
+        Background="Transparent">
+
+    <UserControl.Styles>
+        <Style Selector="TextBlock.sectionTitle">
+            <Setter Property="Foreground" Value="#FFFFFFFF"/>
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style Selector="TextBlock.statLabel">
+            <Setter Property="Foreground" Value="#FF9E9E9E"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+        <Style Selector="TextBlock.statValue">
+            <Setter Property="Foreground" Value="#FFFFFFFF"/>
+            <Setter Property="FontSize" Value="24"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style Selector="Border.statCard">
+            <Setter Property="Background" Value="#FF202022"/>
+            <Setter Property="BorderBrush" Value="#FF353538"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="20,16"/>
+        </Style>
+        <Style Selector="CheckBox.toggle">
+            <Setter Property="Foreground" Value="#FFD4D4D4"/>
+            <Setter Property="FontSize" Value="14"/>
+        </Style>
+    </UserControl.Styles>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="40,32" Spacing="32">
+
+            <!-- Header -->
+            <StackPanel Spacing="8">
+                <TextBlock Text="Dashboard" Classes="sectionTitle"/>
+                <TextBlock Text="Overview of your proxy status and recent activity"
+                           Foreground="#FF9E9E9E" FontSize="13"/>
+            </StackPanel>
+
+            <!-- Proxy Status Section -->
+            <Border Classes="statCard">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="24">
+                    <!-- Status dot + toggle -->
+                    <StackPanel Grid.Column="0"
+                                Orientation="Horizontal"
+                                Spacing="14"
+                                VerticalAlignment="Center">
+                        <Border Width="12" Height="12"
+                                CornerRadius="6"
+                                Background="{Binding ProxyStatusColor}">
+                            <Border.Transitions>
+                                <Transitions>
+                                    <BrushTransition Property="Background" Duration="0:0:0.3"/>
+                                </Transitions>
+                            </Border.Transitions>
+                        </Border>
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="{Binding ProxyStatusText}"
+                                       FontSize="18"
+                                       FontWeight="SemiBold"
+                                       Foreground="#FFFFFFFF"/>
+                            <TextBlock Text="{Binding EngineType}"
+                                       Classes="statLabel"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Proxy toggle -->
+                    <CheckBox Grid.Column="2"
+                              Classes="toggle"
+                              IsChecked="{Binding IsProxyEnabled, Mode=TwoWay}"
+                              Content="Proxy Enabled"
+                              VerticalAlignment="Center"/>
+                </Grid>
+            </Border>
+
+            <!-- Quick Stats -->
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
+                <Border Grid.Column="0" Classes="statCard">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Active Rules" Classes="statLabel"/>
+                        <TextBlock Text="{Binding ActiveRulesCount}" Classes="statValue"/>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="1" Classes="statCard">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Engine Type" Classes="statLabel"/>
+                        <TextBlock Text="{Binding EngineType}" Classes="statValue"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Recent Activity -->
+            <StackPanel Spacing="12">
+                <TextBlock Text="Recent Activity" FontSize="15" FontWeight="SemiBold" Foreground="#FFFFFFFF"/>
+                <Border Background="#FF111112"
+                        BorderBrush="#FF353538"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="16"
+                        MinHeight="180">
+                    <ScrollViewer>
+                        <TextBlock Text="{Binding RecentActivity}"
+                                   FontFamily="Consolas,monospace"
+                                   FontSize="12"
+                                   Foreground="#FF9E9E9E"
+                                   TextWrapping="Wrap"
+                                   IsVisible="{Binding RecentActivity, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                    </ScrollViewer>
+                </Border>
+            </StackPanel>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
