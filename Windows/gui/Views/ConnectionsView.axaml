@@ -1,0 +1,111 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:JackBridge.GUI.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="500"
+        x:Class="JackBridge.GUI.Views.ConnectionsView"
+        x:DataType="vm:ConnectionsViewModel"
+        x:CompileBindings="True"
+        Background="Transparent">
+
+    <DockPanel>
+        <!-- Search and Clear Bar -->
+        <Border DockPanel.Dock="Top"
+                Background="#FF1E1E1E"
+                Padding="12"
+                BorderBrush="#FF3F3F46"
+                BorderThickness="0,0,0,1">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBox Grid.Column="0"
+                         Text="{Binding SearchText}"
+                         Watermark="Search connections (press Enter)..."
+                         Margin="0,0,8,0">
+                    <TextBox.KeyBindings>
+                        <KeyBinding Gesture="Enter" Command="{Binding SearchCommand}"/>
+                    </TextBox.KeyBindings>
+                </TextBox>
+                <Button Grid.Column="1"
+                        Content="Clear"
+                        Classes="secondary"
+                        Command="{Binding ClearCommand}"
+                        Padding="12,6"/>
+            </Grid>
+        </Border>
+
+        <!-- Observed Processes -->
+        <Border DockPanel.Dock="Top"
+                Background="#FF202020"
+                Padding="12"
+                BorderBrush="#FF3F3F46"
+                BorderThickness="0,0,0,1"
+                IsVisible="{Binding HasObservedProcesses}">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                          VerticalScrollBarVisibility="Auto"
+                          MaxHeight="170">
+                <ItemsControl ItemsSource="{Binding ObservedProcesses}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="#FF2D2D30"
+                                    BorderBrush="#FF3F3F46"
+                                    BorderThickness="1"
+                                    CornerRadius="6"
+                                    Padding="10,8"
+                                    Width="320"
+                                    Margin="0,0,8,8">
+                                <Grid RowDefinitions="Auto,Auto"
+                                      ColumnDefinitions="*,Auto">
+                                    <TextBlock Grid.Row="0"
+                                               Grid.Column="0"
+                                               Text="{Binding ProcessName}"
+                                               FontWeight="SemiBold"
+                                               TextTrimming="CharacterEllipsis"/>
+                                    <Button Grid.Row="0"
+                                            Grid.RowSpan="2"
+                                            Grid.Column="1"
+                                            Content="Add Rule"
+                                            Command="{Binding AddRuleCommand}"
+                                            Padding="10,5"
+                                            Margin="10,0,0,0"/>
+                                    <StackPanel Grid.Row="1"
+                                                Grid.Column="0"
+                                                Orientation="Horizontal"
+                                                Spacing="8">
+                                        <TextBlock Text="{Binding TargetText}"
+                                                   Foreground="#FF9E9E9E"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   MaxWidth="135"
+                                                   FontSize="12"/>
+                                        <TextBlock Text="{Binding HitCount}"
+                                                   Foreground="#FF9E9E9E"
+                                                   FontSize="12"/>
+                                        <TextBlock Text="{Binding LastSeenText}"
+                                                   Foreground="#FF9E9E9E"
+                                                   FontSize="12"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Connection Log -->
+        <ScrollViewer>
+            <TextBox Text="{Binding FilteredLog, Mode=OneWay}"
+                     IsReadOnly="True"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     Background="Transparent"
+                     BorderThickness="0"
+                     Watermark="No active connections..."
+                     MinHeight="400"/>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

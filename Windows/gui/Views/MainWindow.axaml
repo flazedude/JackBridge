@@ -2,18 +2,16 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:JackBridge.GUI.ViewModels"
         xmlns:views="using:JackBridge.GUI.Views"
-        xmlns:services="using:JackBridge.GUI.Services"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="650"
         x:Class="JackBridge.GUI.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        x:CompileBindings="True"
         Title="{Binding Title}"
         Icon="/Assets/logo.ico"
         Width="1100" Height="650"
         MinWidth="900" MinHeight="600"
-        Background="#1E1E1E"
+        Background="#FF1d1d1f"
         TransparencyLevelHint="AcrylicBlur"
         ExtendClientAreaToDecorationsHint="True">
 
@@ -22,6 +20,15 @@
     </Design.DataContext>
 
     <Window.DataTemplates>
+        <DataTemplate DataType="{x:Type vm:HomeViewModel}">
+            <views:HomeView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ConnectionsViewModel}">
+            <views:ConnectionsView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ActivityViewModel}">
+            <views:ActivityView/>
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:ProxySettingsViewModel}">
             <views:ProxySettingsWindow/>
         </DataTemplate>
@@ -34,568 +41,276 @@
     </Window.DataTemplates>
 
     <Window.Styles>
-        <!-- Modern Dark Theme -->
+        <!-- ═══ Apple Design System — Dark Theme ═══ -->
+        <!-- Single accent: Action Blue #0066cc. No second brand color. -->
+
         <Style Selector="Window">
-            <Setter Property="Background" Value="#FF1E1E1E"/>
+            <Setter Property="Background" Value="#FF1d1d1f"/>
         </Style>
 
-        <!-- Menu Styling -->
-        <Style Selector="Menu">
-            <Setter Property="Background" Value="#FF2D2D30"/>
-            <Setter Property="Foreground" Value="#FFE0E0E0"/>
-            <Setter Property="Height" Value="30"/>
-        </Style>
-
-        <Style Selector="MenuItem">
-            <Setter Property="Foreground" Value="#FFE0E0E0"/>
-            <Setter Property="Padding" Value="12,6"/>
-            <Setter Property="Height" Value="30"/>
-        </Style>
-
-        <Style Selector="MenuItem:pointerover /template/ Border#PART_LayoutRoot">
-            <Setter Property="Background" Value="#FF3E3E42"/>
-        </Style>
-
-        <Style Selector="MenuItem:selected /template/ Border#PART_LayoutRoot">
-            <Setter Property="Background" Value="#FF094771"/>
-        </Style>
-
-        <!-- Tab Control -->
-        <Style Selector="TabControl">
-            <Setter Property="Background" Value="Transparent"/>
-        </Style>
-
-        <Style Selector="TabItem">
-            <Setter Property="Foreground" Value="#FF9E9E9E"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Padding" Value="16,8"/>
-            <Setter Property="MinHeight" Value="36"/>
-        </Style>
-
-        <Style Selector="TabItem:selected">
+        <!-- Typography -->
+        <Style Selector="TextBlock">
             <Setter Property="Foreground" Value="#FFFFFFFF"/>
-            <Setter Property="Background" Value="#FF2D2D30"/>
+            <Setter Property="FontFamily" Value="system-ui, -apple-system, BlinkMacSystemFont, Inter, sans-serif"/>
         </Style>
 
-        <Style Selector="TabItem:pointerover">
-            <Setter Property="Foreground" Value="#FFCCCCCC"/>
-        </Style>
-
-        <!-- TextBox Styling -->
+        <!-- Inputs -->
         <Style Selector="TextBox">
-            <Setter Property="Background" Value="#FF1E1E1E"/>
-            <Setter Property="Foreground" Value="#FFD4D4D4"/>
-            <Setter Property="BorderBrush" Value="#FF3F3F46"/>
+            <Setter Property="Background" Value="#FF2a2a2c"/>
+            <Setter Property="Foreground" Value="#FFFFFFFF"/>
+            <Setter Property="BorderBrush" Value="#FF3a3a3c"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="8"/>
-            <Setter Property="FontFamily" Value="Consolas,Courier New"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="SelectionBrush" Value="#FF264F78"/>
-            <Setter Property="SelectionForegroundBrush" Value="#FFFFFFFF"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="CornerRadius" Value="8"/>
         </Style>
-
         <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
-            <Setter Property="BorderBrush" Value="#FF007ACC"/>
-            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#FF0066cc"/>
+            <Setter Property="BorderThickness" Value="2"/>
         </Style>
 
-        <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
-            <Setter Property="BorderBrush" Value="#FF555555"/>
-        </Style>
-
-        <!-- Button Styling -->
+        <!-- Buttons — pill-shaped primaries, compact utilities -->
         <Style Selector="Button">
-            <Setter Property="Background" Value="#FF0E639C"/>
+            <Setter Property="Background" Value="#FF0066cc"/>
             <Setter Property="Foreground" Value="#FFFFFFFF"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="16,8"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="CornerRadius" Value="3"/>
+            <Setter Property="Padding" Value="22,11"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="400"/>
+            <Setter Property="CornerRadius" Value="9999"/>
             <Setter Property="Cursor" Value="Hand"/>
         </Style>
-
         <Style Selector="Button:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#FF1177BB"/>
+            <Setter Property="Background" Value="#FF0071e3"/>
         </Style>
-
         <Style Selector="Button:pressed /template/ ContentPresenter">
-            <Setter Property="Background" Value="#FF005A9E"/>
+            <Setter Property="Background" Value="#FF0066cc"/>
         </Style>
 
+        <!-- Secondary ghost-pill button -->
         <Style Selector="Button.secondary">
-            <Setter Property="Background" Value="#FF3E3E42"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#FF0066cc"/>
+            <Setter Property="BorderBrush" Value="#FF0066cc"/>
+            <Setter Property="BorderThickness" Value="1"/>
         </Style>
-
         <Style Selector="Button.secondary:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#FF505050"/>
+            <Setter Property="Background" Value="#1A0066cc"/>
         </Style>
 
-        <Style Selector="Button.switchSegment">
+        <!-- Global nav link button -->
+        <Style Selector="Button.navLink">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#FF9E9E9E"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="18,7"/>
-            <Setter Property="MinWidth" Value="74"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="CornerRadius" Value="14"/>
+            <Setter Property="Foreground" Value="#FFcccccc"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="400"/>
+            <Setter Property="Padding" Value="16,12"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
         </Style>
-
-        <Style Selector="Button.switchSegment:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#FF3E3E42"/>
-        </Style>
-
-        <Style Selector="Button.switchSegment.activeOff">
-            <Setter Property="Background" Value="#FF5A2D2D"/>
+        <Style Selector="Button.navLink:pointerover">
             <Setter Property="Foreground" Value="#FFFFFFFF"/>
         </Style>
-
-        <Style Selector="Button.switchSegment.activeOn">
-            <Setter Property="Background" Value="#FF147A45"/>
-            <Setter Property="Foreground" Value="#FFFFFFFF"/>
+        <Style Selector="Button.navLink:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#FF333336"/>
+            <Setter Property="CornerRadius" Value="6"/>
         </Style>
 
-        <Style Selector="Button.barAction">
-            <Setter Property="Background" Value="#FF303033"/>
-            <Setter Property="Foreground" Value="#FFEDEDED"/>
-            <Setter Property="BorderBrush" Value="#FF464646"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="10,6"/>
-            <Setter Property="MinWidth" Value="86"/>
-            <Setter Property="CornerRadius" Value="4"/>
-        </Style>
-
-        <Style Selector="Button.barAction:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#FF3A3A3D"/>
-        </Style>
-
-        <Style Selector="Button.close">
+        <!-- Window control buttons in global nav -->
+        <Style Selector="Button.windowControl">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Padding" Value="8"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="Width" Value="36"/>
-            <Setter Property="Height" Value="36"/>
+            <Setter Property="Foreground" Value="#FFcccccc"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Width" Value="44"/>
+            <Setter Property="Height" Value="44"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="CornerRadius" Value="0"/>
         </Style>
-
-        <Style Selector="Button.close:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#FFE81123"/>
-        </Style>
-
-        <!-- CheckBox -->
-        <Style Selector="CheckBox">
-            <Setter Property="Foreground" Value="#FFD4D4D4"/>
-        </Style>
-
-        <!-- ListBox -->
-        <Style Selector="ListBox">
-            <Setter Property="Background" Value="#FF252526"/>
-            <Setter Property="BorderBrush" Value="#FF3F3F46"/>
-            <Setter Property="BorderThickness" Value="1"/>
-        </Style>
-
-        <Style Selector="ListBoxItem">
-            <Setter Property="Padding" Value="12"/>
-            <Setter Property="MinHeight" Value="48"/>
-        </Style>
-
-        <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
-            <Setter Property="Background" Value="#FF094771"/>
-        </Style>
-
-        <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#FF2A2D2E"/>
+        <Style Selector="Button.windowControl:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#FF3a3a3c"/>
         </Style>
 
         <!-- ComboBox -->
         <Style Selector="ComboBox">
-            <Setter Property="Background" Value="#FF3C3C3C"/>
-            <Setter Property="Foreground" Value="#FFD4D4D4"/>
-            <Setter Property="BorderBrush" Value="#FF3F3F46"/>
-            <Setter Property="Padding" Value="8"/>
+            <Setter Property="Background" Value="#FF2a2a2c"/>
+            <Setter Property="Foreground" Value="#FFFFFFFF"/>
+            <Setter Property="BorderBrush" Value="#FF3a3a3c"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="CornerRadius" Value="8"/>
         </Style>
 
-        <Style Selector="ComboBox:pointerover /template/ Border#Background">
-            <Setter Property="BorderBrush" Value="#FF555555"/>
+        <!-- CheckBox -->
+        <Style Selector="CheckBox">
+            <Setter Property="Foreground" Value="#FFcccccc"/>
+            <Setter Property="FontSize" Value="14"/>
         </Style>
 
-        <Style Selector="ComboBox:focus /template/ Border#Background">
-            <Setter Property="BorderBrush" Value="#FF007ACC"/>
-        </Style>
-
-        <!-- TextBlock -->
-        <Style Selector="TextBlock">
-            <Setter Property="Foreground" Value="#FFD4D4D4"/>
-        </Style>
-
-        <Style Selector="TextBlock.label">
-            <Setter Property="FontWeight" Value="Medium"/>
-            <Setter Property="Margin" Value="0,0,0,4"/>
-        </Style>
-
-        <Style Selector="TextBlock.secondary">
-            <Setter Property="Foreground" Value="#FF9E9E9E"/>
-        </Style>
-
-        <Style Selector="Border.slidePanel">
-            <Setter Property="Transitions">
-                <Transitions>
-                    <ThicknessTransition Property="Margin" Duration="0:0:0.18"/>
-                </Transitions>
-            </Setter>
+        <!-- ScrollViewer — invisible chrome -->
+        <Style Selector="ScrollViewer">
+            <Setter Property="Background" Value="Transparent"/>
         </Style>
     </Window.Styles>
 
-    <Grid>
-        <!-- Main Content -->
-        <DockPanel>
-            <!-- Title Bar (Custom) -->
-            <Border DockPanel.Dock="Top" Background="#FF2D2D30" Height="32" IsHitTestVisible="False">
-                <Grid>
-                    <TextBlock Text="JackBridge"
-                               Foreground="#FFE0E0E0"
-                               FontSize="12"
-                               VerticalAlignment="Center"
-                               Margin="12,0,0,0"/>
-                </Grid>
-            </Border>
-
-            <!-- Menu Bar -->
-            <Menu DockPanel.Dock="Top" Background="#FF2D2D30">
-                <MenuItem Header="{Binding Loc.MenuProxy}">
-                    <MenuItem Header="{Binding ProxyToggleText}"
-                              Command="{Binding ToggleProxyEnabledCommand}">
-                        <MenuItem.Icon>
-                            <CheckBox IsChecked="{Binding IsProxyEnabled}"
-                                      IsHitTestVisible="False"
-                                      Margin="0"/>
-                        </MenuItem.Icon>
-                    </MenuItem>
-                    <Separator/>
-                    <MenuItem Header="{Binding Loc.MenuProxySettings}" Command="{Binding ShowProxySettingsCommand}"/>
-                    <MenuItem Header="{Binding Loc.MenuProxyRules}" Command="{Binding ShowProxyRulesCommand}"/>
-                    <Separator/>
-                    <MenuItem Header="{Binding Loc.MenuEnableTrafficLogging}"
-                              Command="{Binding ToggleTrafficLoggingCommand}">
-                        <MenuItem.Icon>
-                            <CheckBox IsChecked="{Binding IsTrafficLoggingEnabled}"
-                                      IsHitTestVisible="False"
-                                      Margin="0"/>
-                        </MenuItem.Icon>
-                    </MenuItem>
-                    <MenuItem Header="{Binding Loc.MenuDnsViaProxy}"
-                              Command="{Binding ToggleDnsViaProxyCommand}">
-                        <MenuItem.Icon>
-                            <CheckBox IsChecked="{Binding DnsViaProxy}"
-                                      IsHitTestVisible="False"
-                                      Margin="0"/>
-                        </MenuItem.Icon>
-                    </MenuItem>
-                    <MenuItem Header="{Binding Loc.MenuLocalhostViaProxy}"
-                              Command="{Binding ToggleLocalhostViaProxyCommand}">
-                        <MenuItem.Icon>
-                            <CheckBox IsChecked="{Binding LocalhostViaProxy}"
-                                      IsHitTestVisible="False"
-                                      Margin="0"/>
-                        </MenuItem.Icon>
-                    </MenuItem>
-                </MenuItem>
-                <MenuItem Header="{Binding Loc.MenuSettings}">
-                    <MenuItem Header="{Binding Loc.MenuCloseToTray}"
-                              Command="{Binding ToggleCloseToTrayCommand}">
-                        <MenuItem.Icon>
-                            <CheckBox IsChecked="{Binding CloseToTray}"
-                                      IsHitTestVisible="False"
-                                      Margin="0"/>
-                        </MenuItem.Icon>
-                    </MenuItem>
-                    <MenuItem Header="{Binding Loc.MenuRunAtStartup}"
-                              Command="{Binding ToggleStartWithWindowsCommand}">
-                        <MenuItem.Icon>
-                            <CheckBox IsChecked="{Binding StartWithWindows}"
-                                      IsHitTestVisible="False"
-                                      Margin="0"/>
-                        </MenuItem.Icon>
-                    </MenuItem>
-                    <Separator/>
-                    <MenuItem Header="{Binding Loc.MenuLanguage}">
-                        <MenuItem Header="English" Click="OnChangeLanguageEnglish">
-                            <MenuItem.Icon>
-                                <TextBlock Text="{Binding EnglishCheckmark}" FontSize="14"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem Header="中文 (Chinese)" Click="OnChangeLanguageChinese">
-                            <MenuItem.Icon>
-                                <TextBlock Text="{Binding ChineseCheckmark}" FontSize="14"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                    </MenuItem>
-                </MenuItem>
-                <MenuItem Header="{Binding Loc.MenuAbout}">
-                    <MenuItem Header="{Binding Loc.MenuAboutJackBridge}" Command="{Binding ShowAboutCommand}"/>
-                </MenuItem>
-            </Menu>
-
-            <!-- Proxy Control Bar -->
-            <Border DockPanel.Dock="Top"
-                    Background="#FF252526"
-                    BorderBrush="#FF3F3F46"
-                    BorderThickness="0,1,0,1"
-                    Padding="12,8">
-                <Grid ColumnDefinitions="Auto,*,Auto,Auto" VerticalAlignment="Center">
-                    <Border Grid.Column="0"
-                            Background="#FF1E1E1E"
-                            BorderBrush="#FF3F3F46"
-                            BorderThickness="1"
-                            CornerRadius="17"
-                            Padding="3">
-                        <Grid ColumnDefinitions="Auto,Auto">
-                            <Button Grid.Column="0"
-                                    Classes="switchSegment activeOff"
-                                    Command="{Binding DisableProxyCommand}"
-                                    IsVisible="{Binding !IsProxyEnabled}">
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <Image Source="/Assets/proxy-off.png" Width="16" Height="16"/>
-                                    <TextBlock Text="Off"/>
-                                </StackPanel>
-                            </Button>
-                            <Button Grid.Column="0"
-                                    Classes="switchSegment"
-                                    Command="{Binding DisableProxyCommand}"
-                                    IsVisible="{Binding IsProxyEnabled}">
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <Image Source="/Assets/proxy-off.png" Width="16" Height="16"/>
-                                    <TextBlock Text="Off"/>
-                                </StackPanel>
-                            </Button>
-                            <Button Grid.Column="1"
-                                    Classes="switchSegment activeOn"
-                                    Command="{Binding EnableProxyCommand}"
-                                    IsVisible="{Binding IsProxyEnabled}">
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <Image Source="/Assets/proxy-on.png" Width="16" Height="16"/>
-                                    <TextBlock Text="On"/>
-                                </StackPanel>
-                            </Button>
-                            <Button Grid.Column="1"
-                                    Classes="switchSegment"
-                                    Command="{Binding EnableProxyCommand}"
-                                    IsVisible="{Binding !IsProxyEnabled}">
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <Image Source="/Assets/proxy-on.png" Width="16" Height="16"/>
-                                    <TextBlock Text="On"/>
-                                </StackPanel>
-                            </Button>
-                        </Grid>
-                    </Border>
-                    <TextBlock Grid.Column="1"
-                               Text="{Binding ProxyStatusText}"
-                               Classes="secondary"
-                               VerticalAlignment="Center"
-                               Margin="14,0,0,0"/>
-                    <StackPanel Grid.Column="2"
-                                Orientation="Horizontal"
+    <!-- ═══ Layout: Global Nav + Content ═══ -->
+    <Grid RowDefinitions="44,*">
+        <!-- Global Nav — 44px pure black, Apple-style -->
+        <Border Grid.Row="0"
+                Background="#FF000000">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <!-- Left: Logo + Nav links -->
+                <StackPanel Grid.Column="0"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal"
                                 Spacing="8"
-                                VerticalAlignment="Center"
-                                Margin="12,0,12,0">
-                        <Button Classes="barAction"
-                                Command="{Binding ShowProxyRulesCommand}">
-                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                <Image Source="/Assets/nav-rules.png" Width="16" Height="16"/>
-                                <TextBlock Text="Rules"/>
-                            </StackPanel>
-                        </Button>
-                        <Button Classes="barAction"
-                                Command="{Binding ShowProxySettingsCommand}">
-                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                <Image Source="/Assets/nav-settings.png" Width="16" Height="16"/>
-                                <TextBlock Text="Settings"/>
-                            </StackPanel>
-                        </Button>
+                                Margin="20,0,0,0"
+                                VerticalAlignment="Center">
+                        <Image Source="/Assets/logo.ico" Width="16" Height="16"/>
+                        <TextBlock Text="JackBridge"
+                                   FontSize="14"
+                                   FontWeight="600"
+                                   Foreground="#FFFFFFFF"
+                                   VerticalAlignment="Center"/>
+                        <Border Background="#FF0066cc"
+                                CornerRadius="3"
+                                Padding="4,1"
+                                VerticalAlignment="Center">
+                            <TextBlock Text="v3.0"
+                                       Foreground="#FFFFFFFF"
+                                       FontSize="9"
+                                       FontWeight="600"/>
+                        </Border>
                     </StackPanel>
-                    <TextBlock Grid.Column="3"
-                               Text="Traffic interception"
-                               Classes="secondary"
-                               VerticalAlignment="Center"/>
-                </Grid>
-            </Border>
+                    <StackPanel Orientation="Horizontal" Margin="24,0,0,0">
+                        <Button Classes="navLink" Content="Home"
+                                Command="{Binding NavigateHomeCommand}"/>
+                        <Button Classes="navLink" Content="Connections"
+                                Command="{Binding NavigateConnectionsCommand}"/>
+                        <Button Classes="navLink" Content="Rules"
+                                Command="{Binding ShowProxyRulesCommand}"/>
+                        <Button Classes="navLink" Content="Settings"
+                                Command="{Binding ShowProxySettingsCommand}"/>
+                        <Button Classes="navLink" Content="About"
+                                Command="{Binding ShowAboutCommand}"/>
+                    </StackPanel>
+                </StackPanel>
 
-            <!-- Tab Control -->
-            <TabControl SelectedIndex="{Binding SelectedTabIndex}" Background="#FF1E1E1E" Padding="0">
-                <TabItem Header="{Binding Loc.TabConnections}">
-                    <Border Background="#FF252526" Margin="8" CornerRadius="4" BorderBrush="#FF3F3F46" BorderThickness="1">
-                        <DockPanel>
-                            <!-- Search and Clear Bar -->
-                            <Border DockPanel.Dock="Top" Background="#FF1E1E1E" Padding="8" BorderBrush="#FF3F3F46" BorderThickness="0,0,0,1">
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <TextBox Grid.Column="0"
-                                             Text="{Binding ConnectionsSearchText}"
-                                             Watermark="Search connections (press Enter)..."
-                                             Margin="0,0,8,0">
-                                        <TextBox.KeyBindings>
-                                            <KeyBinding Gesture="Enter" Command="{Binding SearchConnectionsCommand}"/>
-                                        </TextBox.KeyBindings>
-                                    </TextBox>
-                                    <Button Grid.Column="1"
-                                            Content="{Binding Loc.ButtonClear}"
-                                            Classes="secondary"
-                                            Command="{Binding ClearConnectionsLogCommand}"
-                                            Padding="12,6"/>
-                                </Grid>
-                            </Border>
+                <!-- Center: drag region -->
+                <Border Grid.Column="1" Background="Transparent"
+                        PointerPressed="OnTitleBarPointerPressed"/>
 
-                            <Border DockPanel.Dock="Top"
-                                    Background="#FF202020"
-                                    Padding="8"
-                                    BorderBrush="#FF3F3F46"
-                                    BorderThickness="0,0,0,1"
-                                    IsVisible="{Binding HasObservedProcesses}">
-                                <ScrollViewer HorizontalScrollBarVisibility="Disabled"
-                                              VerticalScrollBarVisibility="Auto"
-                                              MaxHeight="170">
-                                    <ItemsControl ItemsSource="{Binding ObservedProcesses}">
-                                        <ItemsControl.ItemsPanel>
-                                            <ItemsPanelTemplate>
-                                                <WrapPanel Orientation="Horizontal"/>
-                                            </ItemsPanelTemplate>
-                                        </ItemsControl.ItemsPanel>
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <Border Background="#FF2D2D30"
-                                                        BorderBrush="#FF3F3F46"
-                                                        BorderThickness="1"
-                                                        CornerRadius="4"
-                                                        Padding="10,8"
-                                                        Width="320"
-                                                        Margin="0,0,8,8">
-                                                    <Grid RowDefinitions="Auto,Auto"
-                                                          ColumnDefinitions="*,Auto">
-                                                        <TextBlock Grid.Row="0"
-                                                                   Grid.Column="0"
-                                                                   Text="{Binding ProcessName}"
-                                                                   FontWeight="SemiBold"
-                                                                   TextTrimming="CharacterEllipsis"/>
-                                                        <Button Grid.Row="0"
-                                                                Grid.RowSpan="2"
-                                                                Grid.Column="1"
-                                                                Content="Add Rule"
-                                                                Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).AddObservedProcessRuleCommand}"
-                                                                CommandParameter="{Binding}"
-                                                                Padding="10,5"
-                                                                Margin="10,0,0,0"/>
-                                                        <StackPanel Grid.Row="1"
-                                                                    Grid.Column="0"
-                                                                    Orientation="Horizontal"
-                                                                    Spacing="8">
-                                                                    <TextBlock Text="{Binding TargetText}"
-                                                                       Classes="secondary"
-                                                                       TextTrimming="CharacterEllipsis"
-                                                                       MaxWidth="135"
-                                                                       FontSize="12"/>
-                                                            <TextBlock Text="{Binding HitCount, StringFormat='Hits {0}'}"
-                                                                       Classes="secondary"
-                                                                       FontSize="12"/>
-                                                            <TextBlock Text="{Binding LastSeenText}"
-                                                                       Classes="secondary"
-                                                                       FontSize="12"/>
-                                                        </StackPanel>
-                                                    </Grid>
-                                                </Border>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </ScrollViewer>
-                            </Border>
-
-                            <!-- Connections Log -->
-                            <ScrollViewer>
-                                <TextBox Text="{Binding FilteredConnectionsLog, Mode=OneWay}"
-                                         IsReadOnly="True"
-                                         AcceptsReturn="True"
-                                         TextWrapping="Wrap"
-                                         Background="Transparent"
-                                         BorderThickness="0"
-                                         Watermark="No active connections..."
-                                         MinHeight="500"/>
-                            </ScrollViewer>
-                        </DockPanel>
-                    </Border>
-                </TabItem>
-                <TabItem Header="{Binding Loc.TabActivity}">
-                    <Border Background="#FF252526" Margin="8" CornerRadius="4" BorderBrush="#FF3F3F46" BorderThickness="1">
-                        <DockPanel>
-                            <!-- Search and Clear Bar -->
-                            <Border DockPanel.Dock="Top" Background="#FF1E1E1E" Padding="8" BorderBrush="#FF3F3F46" BorderThickness="0,0,0,1">
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <TextBox Grid.Column="0"
-                                             Text="{Binding ActivitySearchText}"
-                                             Watermark="Search activity (press Enter)..."
-                                             Margin="0,0,8,0">
-                                        <TextBox.KeyBindings>
-                                            <KeyBinding Gesture="Enter" Command="{Binding SearchActivityCommand}"/>
-                                        </TextBox.KeyBindings>
-                                    </TextBox>
-                                    <Button Grid.Column="1"
-                                            Content="{Binding Loc.ButtonClear}"
-                                            Classes="secondary"
-                                            Command="{Binding ClearActivityLogCommand}"
-                                            Padding="12,6"/>
-                                </Grid>
-                            </Border>
-
-                            <!-- Activity Log -->
-                            <ScrollViewer>
-                                <TextBox Text="{Binding FilteredActivityLog, Mode=OneWay}"
-                                         IsReadOnly="True"
-                                         AcceptsReturn="True"
-                                         TextWrapping="Wrap"
-                                         Background="Transparent"
-                                         BorderThickness="0"
-                                         MinHeight="500"/>
-                            </ScrollViewer>
-                        </DockPanel>
-                    </Border>
-                </TabItem>
-            </TabControl>
-        </DockPanel>
-
-        <!-- Unified slide-in panel host -->
-        <Grid IsVisible="{Binding IsPanelVisible}"
-              Background="#99000000">
-            <Border Background="Transparent"
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Stretch"
-                    PointerPressed="OnPanelBackdropPressed"/>
-            <Border Classes="slidePanel"
-                    Width="{Binding PanelWidth}"
-                    Margin="{Binding PanelMargin}"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Stretch"
-                    Background="#FF2D2D30"
-                    BorderBrush="#FF3F3F46"
-                    BorderThickness="1,0,0,0"
-                    BoxShadow="-18 0 34 0 #88000000">
-                <Grid RowDefinitions="Auto,*">
-                    <Grid Grid.Row="0"
-                          Height="38"
-                          Background="#FF1E1E1E"
-                          ColumnDefinitions="*,Auto">
-                        <TextBlock Grid.Column="0"
-                                   Text="{Binding Title}"
+                <!-- Right: proxy status + preferences (padded to clear system window buttons) -->
+                <StackPanel Grid.Column="2"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center"
+                            Margin="0,0,140,0">
+                    <!-- Proxy status dot + text -->
+                    <StackPanel Orientation="Horizontal"
+                                Spacing="6"
+                                Margin="0,0,16,0"
+                                VerticalAlignment="Center">
+                        <Border Width="6" Height="6"
+                                CornerRadius="3"
+                                Background="{Binding HomeVm.ProxyStatusColor}"
+                                VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding HomeVm.ProxyStatusText}"
                                    FontSize="12"
-                                   Foreground="#FF9E9E9E"
-                                   VerticalAlignment="Center"
-                                   Margin="14,0,0,0"/>
-                        <Button Grid.Column="1"
-                                Content="X"
-                                Classes="close"
-                                Command="{Binding ClosePanelCommand}"
-                                Margin="0,1,2,1"/>
-                    </Grid>
-                    <ContentControl Grid.Row="1"
-                                    HorizontalContentAlignment="Stretch"
-                                    VerticalContentAlignment="Stretch"
-                                    Content="{Binding ActivePanelViewModel}"/>
-                </Grid>
-            </Border>
-        </Grid>
+                                   Foreground="#FFcccccc"/>
+                    </StackPanel>
+
+                    <!-- Proxy toggle -->
+                    <Border Background="#FF2a2a2c"
+                            CornerRadius="9999"
+                            Padding="2"
+                            Margin="0,0,12,0"
+                            BorderBrush="#FF3a3a3c"
+                            BorderThickness="1"
+                            VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <Button Padding="16,5"
+                                    Command="{Binding EnableProxyCommand}"
+                                    IsVisible="{Binding !IsProxyEnabled}"
+                                    FontSize="11" FontWeight="500"
+                                    CornerRadius="9999"
+                                    Content="Turn On"/>
+                            <Button Padding="16,5"
+                                    Command="{Binding DisableProxyCommand}"
+                                    IsVisible="{Binding IsProxyEnabled}"
+                                    FontSize="11" FontWeight="500"
+                                    CornerRadius="9999"
+                                    Content="Turn Off"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Preferences gear button -->
+                    <Button Padding="6"
+                            Background="Transparent"
+                            VerticalAlignment="Center"
+                            Margin="0,0,4,0">
+                        <TextBlock Text="&#x2699;" FontSize="16" Foreground="#FFcccccc"/>
+                        <Button.Flyout>
+                            <MenuFlyout>
+                                <MenuItem Header="Traffic Logging"
+                                          Command="{Binding ToggleTrafficLoggingCommand}">
+                                    <MenuItem.Icon>
+                                        <CheckBox IsChecked="{Binding IsTrafficLoggingEnabled}"
+                                                  IsHitTestVisible="False"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="DNS via Proxy"
+                                          Command="{Binding ToggleDnsViaProxyCommand}">
+                                    <MenuItem.Icon>
+                                        <CheckBox IsChecked="{Binding DnsViaProxy}"
+                                                  IsHitTestVisible="False"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="Localhost via Proxy"
+                                          Command="{Binding ToggleLocalhostViaProxyCommand}">
+                                    <MenuItem.Icon>
+                                        <CheckBox IsChecked="{Binding LocalhostViaProxy}"
+                                                  IsHitTestVisible="False"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <Separator/>
+                                <MenuItem Header="Close to Tray"
+                                          Command="{Binding ToggleCloseToTrayCommand}">
+                                    <MenuItem.Icon>
+                                        <CheckBox IsChecked="{Binding CloseToTray}"
+                                                  IsHitTestVisible="False"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="Run at Startup"
+                                          Command="{Binding ToggleStartWithWindowsCommand}">
+                                    <MenuItem.Icon>
+                                        <CheckBox IsChecked="{Binding StartWithWindows}"
+                                                  IsHitTestVisible="False"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <Separator/>
+                                <MenuItem Header="English" Click="OnChangeLanguageEnglish">
+                                    <MenuItem.Icon>
+                                        <TextBlock Text="{Binding EnglishCheckmark}" FontSize="14"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="中文 (Chinese)" Click="OnChangeLanguageChinese">
+                                    <MenuItem.Icon>
+                                        <TextBlock Text="{Binding ChineseCheckmark}" FontSize="14"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                            </MenuFlyout>
+                        </Button.Flyout>
+                    </Button>
+
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Content Area — near-black canvas, no borders, no shadows -->
+        <Border Grid.Row="1" Background="Transparent">
+            <ContentControl Content="{Binding ActiveView}"
+                            HorizontalContentAlignment="Stretch"
+                            VerticalContentAlignment="Stretch"/>
+        </Border>
     </Grid>
 </Window>

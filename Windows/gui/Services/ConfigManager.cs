@@ -9,6 +9,7 @@ namespace JackBridge.GUI.Services;
 
 public class AppConfig
 {
+    public string ProxyEngine { get; set; } = "External";
     public string ProxyType { get; set; } = "SOCKS5";
     public string ProxyIp { get; set; } = "";
     public string ProxyPort { get; set; } = "";
@@ -20,7 +21,39 @@ public class AppConfig
     public bool IsTrafficLoggingEnabled { get; set; } = true;
     public string Language { get; set; } = "en";
     public bool CloseToTray { get; set; } = true;
+    public BuiltInProxyConfig BuiltInProxy { get; set; } = new();
     public List<ProxyRuleConfig> ProxyRules { get; set; } = new();
+}
+
+public class BuiltInProxyConfig
+{
+    public string CorePath { get; set; } = "core\\mihomo.exe";
+    public string SubscriptionUrl { get; set; } = "";
+    public string LocalYamlPath { get; set; } = "";
+    public string ActiveProfilePath { get; set; } = "profiles\\mihomo.yaml";
+    public string MixedPort { get; set; } = "8888";
+    public string ControllerPort { get; set; } = "9090";
+    public string ControllerSecret { get; set; } = "";
+    public string Mode { get; set; } = "rule";
+    public string LogLevel { get; set; } = "info";
+    public bool AllowLan { get; set; } = false;
+    public bool Ipv6 { get; set; } = true;
+    public bool UnifiedDelay { get; set; } = true;
+    public bool EnableController { get; set; } = true;
+    public bool AutoUpdateSubscription { get; set; } = false;
+    public bool GeoAutoUpdate { get; set; } = true;
+    public string GeoUpdateInterval { get; set; } = "24";
+    public string GeoIpUrl { get; set; } = "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.dat";
+    public string GeoSiteUrl { get; set; } = "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geosite.dat";
+    public string MmdbUrl { get; set; } = "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/country.mmdb";
+    public string AsnUrl { get; set; } = "https://github.com/xishang0128/geoip/releases/download/latest/GeoLite2-ASN.mmdb";
+    public string SelectorGroup { get; set; } = "GLOBAL";
+    public string SelectedProxyName { get; set; } = "";
+    public string RulePreset { get; set; } = "geo-cn-direct";
+    public bool OverrideDns { get; set; } = false;
+    public string DefaultNameservers { get; set; } = "1.1.1.1,8.8.8.8,223.5.5.5,119.29.29.29";
+    public string Nameservers { get; set; } = "https://1.1.1.1/dns-query,https://8.8.8.8/dns-query,https://dns.alidns.com/dns-query,https://doh.pub/dns-query";
+    public string ProxyServerNameservers { get; set; } = "1.1.1.1,8.8.8.8,223.5.5.5,119.29.29.29";
 }
 
 public class ProxyRuleConfig
@@ -35,6 +68,7 @@ public class ProxyRuleConfig
 }
 
 [JsonSerializable(typeof(AppConfig))]
+[JsonSerializable(typeof(BuiltInProxyConfig))]
 [JsonSerializable(typeof(ProxyRuleConfig))]
 [JsonSerializable(typeof(List<ProxyRuleConfig>))]
 internal partial class AppConfigJsonContext : JsonSerializerContext
@@ -126,6 +160,7 @@ public static class ConfigManager
             var config = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.AppConfig);
             if (config != null)
             {
+                config.BuiltInProxy ??= new BuiltInProxyConfig();
                 config.ProxyRules ??= new List<ProxyRuleConfig>();
                 return config;
             }
